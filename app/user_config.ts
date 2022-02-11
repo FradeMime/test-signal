@@ -28,7 +28,7 @@ if (userData !== undefined) {
 
   app.setPath('userData', userData);
 }
-
+// 用户配置文件夹路径
 console.log(`userData: ${app.getPath('userData')}`);
 
 const userDataPath = app.getPath('userData');

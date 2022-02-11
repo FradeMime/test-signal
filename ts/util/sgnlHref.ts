@@ -4,6 +4,8 @@
 import type { LoggerType } from '../types/Logging';
 import { maybeParseUrl } from './url';
 import { isValidE164 } from './isValidE164';
+// eslint-disable-next-line camelcase
+import * as log from '../logging/log';
 
 const SIGNAL_DOT_ME_HASH_PREFIX = 'p/';
 
@@ -37,13 +39,26 @@ export function isSignalHttpsLink(
   value: string | URL,
   logger: LoggerType
 ): boolean {
+  log.info(`isSignalHttpsLink: value=${value}`);
   const url = parseUrl(value, logger);
+  const ret = Boolean(
+    url &&
+      !url.username &&
+      !url.password &&
+      !url.port &&
+      url.protocol === 'http:' &&
+      (url.host === 'signal.group' ||
+        url.host === 'signal.art' ||
+        url.host === 'signal.me')
+  );
+  log.info(`isSignalHttpsLink: url=${url}`);
+  log.info(`isSignalHttpsLink: ret=${ret}`);
   return Boolean(
     url &&
       !url.username &&
       !url.password &&
       !url.port &&
-      url.protocol === 'https:' &&
+      url.protocol === 'http:' &&
       (url.host === 'signal.group' ||
         url.host === 'signal.art' ||
         url.host === 'signal.me')
@@ -97,11 +112,13 @@ export function parseSignalHttpsLink(
   href: string,
   logger: LoggerType
 ): ParsedSgnlHref {
+  log.info('parseSignalHttpsLink函数');
   const url = parseUrl(href, logger);
   if (!url || !isSignalHttpsLink(url, logger)) {
+    log.info('parseSignalHttpsLink !url');
     return { command: null, args: new Map<never, never>(), hash: undefined };
   }
-
+  log.info('parseSignalHttpsLink url');
   if (url.host === 'signal.art') {
     const hash = url.hash.slice(1);
     const hashParams = new URLSearchParams(hash);
@@ -123,7 +140,7 @@ export function parseSignalHttpsLink(
       hash: url.hash ? url.hash.slice(1) : undefined,
     };
   }
-
+  log.info('parseSignalHttpsLink group');
   if (url.host === 'signal.group' || url.host === 'signal.me') {
     return {
       command: url.host,

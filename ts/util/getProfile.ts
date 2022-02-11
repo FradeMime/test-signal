@@ -37,6 +37,7 @@ export async function getProfile(
     uuid: providedUuid,
     e164: providedE164,
   });
+  log.info(`getProfile id:${id}`);
   const c = window.ConversationController.get(id);
   if (!c) {
     log.error('getProfile: failed to find conversation; doing nothing');
@@ -62,6 +63,7 @@ export async function getProfile(
 
     const profileKey = c.get('profileKey');
     const uuid = c.getCheckedUuid('getProfile');
+    // const uuid = '12345678901';
     const profileKeyVersionHex = c.get('profileKeyVersion');
     if (!profileKeyVersionHex) {
       throw new Error('No profile key version available');

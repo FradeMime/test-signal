@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
-
 import { get, set } from 'lodash';
+import * as log from '../ts/logging/log';
 
 const ENCODING = 'utf8';
 
@@ -25,10 +25,11 @@ export function start(
 ): ConfigType {
   let cachedValue: InternalConfigType | undefined;
   let incomingJson: string | undefined;
-
+  log.info('base_config函数start');
   try {
     incomingJson = readFileSync(targetPath, ENCODING);
     cachedValue = incomingJson ? JSON.parse(incomingJson) : undefined;
+    console.log(`${name} config file path:${targetPath}`);
     console.log(`config/get: Successfully read ${name} config file`);
 
     if (!cachedValue) {

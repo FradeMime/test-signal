@@ -30,10 +30,12 @@ const QR_CODE_SIZE = 256;
 const QR_CODE_FAILED_LINK =
   'https://support.signal.org/hc/articles/360007320451#desktop_multiple_device';
 
+// 二维码链接
 const getQrCodeClassName = getClassNamesFor(
   'module-InstallScreenQrCodeNotScannedStep__qr-code'
 );
 
+// 未扫码步骤
 export const InstallScreenQrCodeNotScannedStep = ({
   i18n,
   provisioningUrl,
@@ -98,6 +100,7 @@ function QrCode(
       return noop;
     }
 
+    // 二维码
     const qrCode = new window.QRCode(qrCodeEl, {
       text: valueToRender,
       width: QR_CODE_SIZE * window.devicePixelRatio,

@@ -223,6 +223,7 @@ export const ConversationDetails: React.ComponentType<Props> = ({
       );
       break;
     case ModalState.AddingGroupMembers:
+      // 加入群组成员
       modalNode = (
         <AddGroupMembersModal
           candidateContacts={candidateContactsToAdd}
@@ -267,6 +268,7 @@ export const ConversationDetails: React.ComponentType<Props> = ({
       );
       break;
     case ModalState.MuteNotifications:
+      // 设置静音
       modalNode = (
         <ConversationNotificationsModal
           i18n={i18n}
@@ -279,6 +281,7 @@ export const ConversationDetails: React.ComponentType<Props> = ({
       );
       break;
     case ModalState.UnmuteNotifications:
+      // 取消静音
       modalNode = (
         <ConfirmationDialog
           actions={[

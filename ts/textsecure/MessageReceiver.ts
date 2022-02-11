@@ -186,6 +186,7 @@ export default class MessageReceiver
 
   private stoppingProcessing?: boolean;
 
+  // 构造函数
   constructor({ server, storage, serverTrustRoot }: MessageReceiverOptions) {
     super();
 
@@ -200,6 +201,7 @@ export default class MessageReceiver
     }
     this.serverTrustRoot = Bytes.fromBase64(serverTrustRoot);
 
+    // p-queue 开源队列 并发控制
     this.incomingQueue = new PQueue({
       concurrency: 1,
       timeout: 1000 * 60 * 2,
@@ -212,6 +214,8 @@ export default class MessageReceiver
     });
 
     // All envelopes start in encryptedQueue and progress to decryptedQueue
+    // 所有的信封都从加密队列encryptedQueue开始
+    // 并逐步转为解密队列decrypteQueue
     this.encryptedQueue = new PQueue({
       concurrency: 1,
       timeout: 1000 * 60 * 2,
@@ -223,6 +227,7 @@ export default class MessageReceiver
       throwOnTimeout: true,
     });
 
+    // 解密和缓存批处理
     this.decryptAndCacheBatcher = createBatcher<CacheAddItemType>({
       name: 'MessageReceiver.decryptAndCacheBatcher',
       wait: 75,
@@ -233,6 +238,7 @@ export default class MessageReceiver
         this.decryptAndCacheBatch(items);
       },
     });
+    // 删除缓存批处理
     this.cacheRemoveBatcher = createBatcher<string>({
       name: 'MessageReceiver.cacheRemoveBatcher',
       wait: 75,
@@ -248,11 +254,13 @@ export default class MessageReceiver
   public handleRequest(request: IncomingWebSocketRequest): void {
     // We do the message decryption here, instead of in the ordered pending queue,
     // to avoid exposing the time it took us to process messages through the time-to-ack.
+    // 在这里解密消息，而不是在挂起的队列中，避免暴露通过时间确认处理消息所花费的时间
     log.info('MessageReceiver: got request', request.verb, request.path);
     if (request.path !== '/api/v1/message') {
       request.respond(200, 'OK');
 
       if (request.verb === 'PUT' && request.path === '/api/v1/queue/empty') {
+        log.info('request Path: /api/v1/queue/empty');
         this.incomingQueue.add(() => {
           this.onEmpty();
         });
@@ -272,7 +280,10 @@ export default class MessageReceiver
       const plaintext = request.body;
 
       try {
+        log.info('handleRequest job');
+        // decode 解密body消息
         const decoded = Proto.Envelope.decode(plaintext);
+        // 规范化时间编号
         const serverTimestamp = normalizeNumber(decoded.serverTimestamp);
 
         const ourUuid = this.storage.user.getCheckedUuid();
@@ -280,7 +291,7 @@ export default class MessageReceiver
         const envelope: ProcessedEnvelope = {
           // Make non-private envelope IDs dashless so they don't get redacted
           //   from logs
-          id: getGuid().replace(/-/g, ''),
+          id: getGuid().replace(/-/g, ''), // 修改信封id
           receivedAtCounter: window.Signal.Util.incrementMessageCounter(),
           receivedAtDate: Date.now(),
           // Calculate the message age (time on server).
@@ -328,7 +339,7 @@ export default class MessageReceiver
   }
 
   public reset(): void {
-    // We always process our cache before processing a new websocket message
+    //  Wealways process our cache before processing a new websocket message
     this.incomingQueue.add(async () => this.queueAllCached());
 
     this.count = 0;
@@ -762,9 +773,11 @@ export default class MessageReceiver
     });
   }
 
+  // 批量解密和缓存
   private async decryptAndCacheBatch(
     items: Array<CacheAddItemType>
   ): Promise<void> {
+    log.info('批量解密和缓存');
     log.info('MessageReceiver.decryptAndCacheBatch', items.length);
 
     const decrypted: Array<
@@ -979,6 +992,7 @@ export default class MessageReceiver
     envelope: ProcessedEnvelope,
     uuidKind: UUIDKind
   ): Promise<DecryptResult> {
+    log.info('加密信封队列');
     let logId = this.getEnvelopeId(envelope);
     log.info(`queueing ${uuidKind} envelope`, logId);
 
@@ -1017,6 +1031,7 @@ export default class MessageReceiver
     }
   }
 
+  // 缓存信封队列
   private async queueCachedEnvelope(
     data: UnprocessedType,
     envelope: ProcessedEnvelope
@@ -1132,6 +1147,7 @@ export default class MessageReceiver
     envelope: UnsealedEnvelope,
     uuidKind: UUIDKind
   ): Promise<DecryptResult> {
+    log.info('解密envelope');
     const logId = this.getEnvelopeId(envelope);
 
     if (this.stoppingProcessing) {

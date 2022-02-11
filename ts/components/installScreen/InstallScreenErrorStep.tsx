@@ -9,7 +9,7 @@ import { openLinkInWebBrowser } from '../../util/openLinkInWebBrowser';
 import { Button, ButtonVariant } from '../Button';
 import { TitlebarDragArea } from '../TitlebarDragArea';
 import { InstallScreenSignalLogo } from './InstallScreenSignalLogo';
-
+// 登录失败界面
 export enum InstallError {
   TooManyDevices,
   TooOld,
@@ -29,27 +29,28 @@ export function InstallScreenErrorStep({
   tryAgain: () => unknown;
 }>): ReactElement {
   let errorMessage: string;
-  let buttonText = i18n('installTryAgain');
+  let buttonText = i18n('installTryAgain'); // 重试
   let onClickButton = () => tryAgain();
   let shouldShowQuitButton = false;
 
   switch (error) {
     case InstallError.TooManyDevices:
-      errorMessage = i18n('installTooManyDevices');
+      errorMessage = i18n('installTooManyDevices'); // 连接过多设备
       break;
     case InstallError.TooOld:
-      errorMessage = i18n('installTooOld');
+      errorMessage = i18n('installTooOld'); // 版本过低
       buttonText = i18n('upgrade');
       onClickButton = () => {
-        openLinkInWebBrowser('https://signal.org/download');
+        // openLinkInWebBrowser('https://signal.org/download');
+        openLinkInWebBrowser('https://www.baidu.com');
       };
       shouldShowQuitButton = true;
       break;
     case InstallError.ConnectionFailed:
-      errorMessage = i18n('installConnectionFailed');
+      errorMessage = i18n('installConnectionFailed'); // 连接服务器失败
       break;
     case InstallError.UnknownError:
-      errorMessage = i18n('installUnknownError');
+      errorMessage = i18n('installUnknownError'); // 位置错误
       break;
     default:
       throw missingCaseError(error);

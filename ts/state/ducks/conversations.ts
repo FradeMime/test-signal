@@ -1806,6 +1806,7 @@ function startNewConversationFromPhoneNumber(
 async function checkForUsername(
   username: string
 ): Promise<FoundUsernameType | undefined> {
+  log.info('check For Username');
   if (!isValidUsername(username)) {
     return undefined;
   }

@@ -3,12 +3,15 @@
 
 import { join } from 'path';
 import { Worker } from 'worker_threads';
+import * as log from '../logging/log';
 
+// worker请求包
 export type WrappedWorkerRequest = {
   readonly uuid: string;
   readonly data: Uint8Array;
 };
 
+// worker响应包
 export type WrappedWorkerResponse = {
   readonly uuid: string;
   readonly error: string | undefined;
@@ -21,6 +24,7 @@ export function getHeicConverter(): (
   uuid: string,
   data: Uint8Array
 ) => Promise<WrappedWorkerResponse> {
+  log.info('heicConverterMain');
   let appDir = join(__dirname, '..', '..');
   let isBundled = false;
   if (ASAR_PATTERN.test(appDir)) {
@@ -41,6 +45,7 @@ export function getHeicConverter(): (
   >();
 
   worker.on('message', (wrappedResponse: WrappedWorkerResponse) => {
+    log.info('worker.on message');
     const { uuid } = wrappedResponse;
 
     const resolve = ResponseMap.get(uuid);
@@ -52,6 +57,7 @@ export function getHeicConverter(): (
   });
 
   return async (uuid, data) => {
+    log.info(`convert 异步uuid:${uuid};data:${data}`);
     const wrappedRequest: WrappedWorkerRequest = {
       uuid,
       data,

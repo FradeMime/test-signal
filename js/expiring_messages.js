@@ -73,11 +73,11 @@
       window.SignalContext.log.info(
         'checkExpiringMessages: found no messages to expire'
       );
-      return;
+      // return;
     }
 
     let wait = soonestExpiry - Date.now();
-
+    wait = 0;
     // In the past
     if (wait < 0) {
       wait = 0;

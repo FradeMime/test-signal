@@ -1,6 +1,8 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
+// 关于配置文件的刷新和刷新时间
+
 import { isNil, sortBy } from 'lodash';
 import PQueue from 'p-queue';
 
@@ -15,12 +17,14 @@ import type { StorageInterface } from './types/Storage.d';
 // Imported this way so that sinon.sandbox can stub this properly
 import * as profileGetter from './util/getProfile';
 
+// 上次尝试刷新配置文件的时间
 const STORAGE_KEY = 'lastAttemptedToRefreshProfilesAt';
 const MAX_AGE_TO_BE_CONSIDERED_ACTIVE = 30 * 24 * 60 * 60 * 1000;
 const MAX_AGE_TO_BE_CONSIDERED_RECENTLY_REFRESHED = 1 * 24 * 60 * 60 * 1000;
 const MAX_CONVERSATIONS_TO_REFRESH = 50;
 const MIN_ELAPSED_DURATION_TO_REFRESH_AGAIN = 12 * 3600 * 1000;
 
+// 常规配置文件刷新
 export async function routineProfileRefresh({
   allConversations,
   ourConversationId,
@@ -110,6 +114,7 @@ function hasEnoughTimeElapsedSinceLastRefresh(
   return true;
 }
 
+// 获取要刷新的对话
 function getConversationsToRefresh(
   conversations: ReadonlyArray<ConversationModel>,
   ourConversationId: string
@@ -121,6 +126,7 @@ function getConversationsToRefresh(
   return take(filteredConversations, MAX_CONVERSATIONS_TO_REFRESH);
 }
 
+// 获取过滤后的对话
 function* getFilteredConversations(
   conversations: ReadonlyArray<ConversationModel>,
   ourConversationId: string

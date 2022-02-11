@@ -1,5 +1,6 @@
 // Copyright 2020-2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
+// 这是聊天的  对话控制器 有如权限 静音 等等
 
 import { debounce, uniq, without } from 'lodash';
 import PQueue from 'p-queue';
@@ -755,6 +756,7 @@ export class ConversationController {
   }
 
   private async doLoad(): Promise<void> {
+    // 会话控制器
     log.info('ConversationController: starting initial fetch');
 
     if (this._conversations.length) {

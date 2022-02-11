@@ -1,6 +1,8 @@
 // Copyright 2020-2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
+// 偏僻的配置[remote]刷新/获取
+
 import { get, throttle } from 'lodash';
 
 import type { WebAPIType } from './textsecure/WebAPI';
@@ -50,6 +52,7 @@ let config: ConfigMapType = {};
 const listeners: ConfigListenersMapType = {};
 
 export async function initRemoteConfig(server: WebAPIType): Promise<void> {
+  log.info('remoteconfig 初始化');
   config = window.storage.get('remoteConfig') || {};
   await maybeRefreshRemoteConfig(server);
 }
@@ -67,12 +70,17 @@ export function onChange(
   };
 }
 
+// 刷新remote配置
 export const refreshRemoteConfig = async (
-  server: WebAPIType
+  _server: WebAPIType
 ): Promise<void> => {
+  log.info('刷新remote config');
   const now = Date.now();
-  const newConfig = await server.getConfig();
-
+  // GET (WS) http://124.232.156.201:28810/v1/config
+  const newConfig = await _server.getConfig();
+  log.info(`newConfig :${JSON.stringify(newConfig)}`);
+  // const newConfig = [{ name: 'test', enabled: true, value: 'test' }];
+  // 根据旧配置处理新配置
   // Process new configuration in light of the old configuration
   // The old configuration is not set as the initial value in reduce because
   // flags may have been deleted

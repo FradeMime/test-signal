@@ -89,7 +89,7 @@ export class CDSSocketManager {
     } = this.options;
 
     const url = `${this.options.url}/discovery/${publicKeyHex}/${codeHashHex}`;
-
+    log.info(`CDSSocketManager url:${url}`);
     return connectWebSocket<CDSSocket>({
       name: 'CDSSocket',
       url,

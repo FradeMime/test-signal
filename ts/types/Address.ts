@@ -5,6 +5,8 @@ import { strictAssert } from '../util/assert';
 
 import type { UUIDStringType } from './UUID';
 import { UUID } from './UUID';
+import * as log from '../logging/log';
+
 
 export type AddressStringType = `${UUIDStringType}.${number}`;
 
@@ -18,6 +20,7 @@ export class Address {
   }
 
   public static parse(value: string): Address {
+    log.info('Address parse函数');
     const match = value.match(ADDRESS_REGEXP);
     strictAssert(match !== null, `Invalid Address: ${value}`);
     const [whole, uuid, deviceId] = match;

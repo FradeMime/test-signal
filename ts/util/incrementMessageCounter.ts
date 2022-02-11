@@ -9,14 +9,19 @@ import * as log from '../logging/log';
 
 let receivedAtCounter: number | undefined;
 
+// 初始化消息计数器
 export async function initializeMessageCounter(): Promise<void> {
   strictAssert(
     receivedAtCounter === undefined,
     'incrementMessageCounter: already initialized'
   );
-
+  log.info('初始化消息计数器');
+  // 关于本地存储 localStorage是否需要考虑使用
+  // https://juejin.cn/post/7048976403349536776
+  // 来加密数据优化
   const storedCounter = Number(localStorage.getItem('lastReceivedAtCounter'));
   const dbCounter = await Data.getMaxMessageCounter();
+  log.info(`storedCounter:${storedCounter};dbCounter:${dbCounter}`);
 
   if (isNumber(dbCounter) && isNumber(storedCounter)) {
     log.info('initializeMessageCounter: picking max of db/stored counters');

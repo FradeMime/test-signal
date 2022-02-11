@@ -1,6 +1,6 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-
+// 什么也没有
 $(document).ready(() => {
   let className: string;
   if (window.Signal.OS.isWindows()) {

@@ -27,6 +27,7 @@ export class UUID {
     strictAssert(isValidUuid(value), `Invalid UUID: ${value}`);
   }
 
+  // uuid格式 转 string
   public toString(): UUIDStringType {
     return this.value as UUIDStringType;
   }
@@ -35,6 +36,7 @@ export class UUID {
     return this.value === other.value;
   }
 
+  // string 转 uuid格式
   public static parse(value: string): UUID {
     return new UUID(value);
   }

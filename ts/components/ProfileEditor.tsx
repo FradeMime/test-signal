@@ -1,6 +1,6 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-
+// 设置个人姓和名
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 
@@ -97,15 +97,15 @@ type DefaultBio = {
 
 const DEFAULT_BIOS: Array<DefaultBio> = [
   {
-    i18nLabel: 'Bio--speak-freely',
+    i18nLabel: 'Bio--speak-freely', // 畅所欲言
     shortName: 'wave',
   },
   {
-    i18nLabel: 'Bio--encrypted',
+    i18nLabel: 'Bio--encrypted', // 已加密
     shortName: 'zipper_mouth_face',
   },
   {
-    i18nLabel: 'Bio--free-to-chat',
+    i18nLabel: 'Bio--free-to-chat', // 有空聊天
     shortName: '+1',
   },
   {
@@ -118,6 +118,7 @@ const DEFAULT_BIOS: Array<DefaultBio> = [
   },
 ];
 
+// 对用户忙进行校验 判断是否有效
 function getUsernameInvalidKey(
   username: string | undefined
 ): { key: string; replacements?: ReplacementValuesType } | undefined {
@@ -127,20 +128,24 @@ function getUsernameInvalidKey(
 
   if (username.length < MIN_USERNAME) {
     return {
+      // Usernames must have a least $min$ characters.
       key: 'ProfileEditor--username--check-character-min',
       replacements: { min: MIN_USERNAME },
     };
   }
 
   if (!/^[0-9a-z_]+$/.test(username)) {
+    // Usernames may only contain a-z, 0-9 and _
     return { key: 'ProfileEditor--username--check-characters' };
   }
   if (!/^[a-z_]/.test(username)) {
+    // 用户名不能以数字开头。
     return { key: 'ProfileEditor--username--check-starting-character' };
   }
 
   if (username.length > MAX_USERNAME) {
     return {
+      // Usernames must have at most $max$ characters.
       key: 'ProfileEditor--username--check-character-max',
       replacements: { max: MAX_USERNAME },
     };
@@ -300,7 +305,7 @@ export const ProfileEditor = ({
     if (!focusNode) {
       return;
     }
-
+    // 这个是 自定义头像  带自己输入内容的
     focusNode.focus();
     focusNode.setSelectionRange(focusNode.value.length, focusNode.value.length);
   }, [editState]);
@@ -338,6 +343,7 @@ export const ProfileEditor = ({
   ]);
 
   useEffect(() => {
+    // 每次编辑都会删除错误提示，并重新校验username的有效性
     // Whenever the user makes a change, we'll get rid of the red error text
     setUsernameError(undefined);
 
@@ -402,6 +408,7 @@ export const ProfileEditor = ({
   let content: JSX.Element;
 
   if (editState === EditState.BetterAvatar) {
+    // 头像更改
     content = (
       <AvatarEditor
         avatarColor={color || AvatarColors[0]}
@@ -419,6 +426,7 @@ export const ProfileEditor = ({
       />
     );
   } else if (editState === EditState.ProfileName) {
+    // 名字更改
     const shouldDisableSave =
       !stagedProfile.firstName ||
       (stagedProfile.firstName === fullName.firstName &&
@@ -437,6 +445,7 @@ export const ProfileEditor = ({
               firstName: String(newFirstName),
             }));
           }}
+          // 名（必填）
           placeholder={i18n('ProfileEditor--first-name')}
           ref={focusInputRef}
           value={stagedProfile.firstName}
@@ -452,10 +461,12 @@ export const ProfileEditor = ({
               familyName: newFamilyName,
             }));
           }}
+          // 姓（可选）
           placeholder={i18n('ProfileEditor--last-name')}
           value={stagedProfile.familyName}
         />
         <Modal.ButtonFooter>
+          {/* 取消按钮 */}
           <Button
             onClick={() => {
               const handleCancel = () => {
@@ -480,6 +491,7 @@ export const ProfileEditor = ({
           >
             {i18n('cancel')}
           </Button>
+          {/* 保存按钮 */}
           <Button
             disabled={shouldDisableSave}
             onClick={() => {

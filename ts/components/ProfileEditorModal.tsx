@@ -50,6 +50,7 @@ export const ProfileEditorModal = ({
         i18n={i18n}
         onClose={toggleProfileEditorHasError}
       >
+        {/* Your profile could not be updated. Please try again. */}
         {i18n('ProfileEditorModal--error')}
       </ConfirmationDialog>
     );

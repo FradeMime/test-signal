@@ -18,6 +18,7 @@ import {
   ProcessedAttachment,
 } from './textsecure/Types.d';
 
+// 有点像聊天对象的数据包属性
 export type UnprocessedType = {
   attempts: number;
   decrypted?: string;

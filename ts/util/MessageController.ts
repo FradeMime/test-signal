@@ -9,6 +9,7 @@ import type { MessageAttributesType } from '../model-types.d';
 
 const FIVE_MINUTES = 5 * durations.MINUTE;
 
+// 查找项目类型
 type LookupItemType = {
   timestamp: number;
   message: MessageModel;

@@ -26,13 +26,14 @@ export class User {
     uuid: string,
     deviceId: number
   ): Promise<void> {
+    log.info(`保存用户uuid_id:${uuid}.${deviceId}`);
     await this.storage.put('uuid_id', `${uuid}.${deviceId}`);
-
-    log.info('storage.user: uuid and device id changed');
+    // log.info('storage.user: uuid and device id changed');
   }
 
   public async setNumber(number: string): Promise<void> {
     if (this.getNumber() === number) {
+      log.info(`用户Number:${number}无需变化`);
       return;
     }
 
@@ -42,9 +43,10 @@ export class User {
       'Cannot update device number without knowing device id'
     );
 
-    log.info('storage.user: number changed');
-
+    // log.info('storage.user: number changed');
+    log.info(`保存用户number_id:${number}.${deviceId}`);
     await Promise.all([
+      // number_id : number.deviceId
       this.storage.put('number_id', `${number}.${deviceId}`),
       this.storage.remove('senderCertificate'),
     ]);
@@ -54,12 +56,14 @@ export class User {
   }
 
   public getNumber(): string | undefined {
+    log.info('获取用户number');
     const numberId = this.storage.get('number_id');
     if (numberId === undefined) return undefined;
     return Helpers.unencodeNumber(numberId)[0];
   }
 
   public getUuid(uuidKind = UUIDKind.ACI): UUID | undefined {
+    log.info('获取用户uuid');
     if (uuidKind === UUIDKind.PNI) {
       const pni = this.storage.get('pni');
       if (pni === undefined) return undefined;
@@ -76,12 +80,15 @@ export class User {
   }
 
   public getCheckedUuid(uuidKind?: UUIDKind): UUID {
+    log.info('校验用户uuid');
     const uuid = this.getUuid(uuidKind);
     strictAssert(uuid !== undefined, 'Must have our own uuid');
+    log.info(`getCheckUuid: uuid${uuid}`);
     return uuid;
   }
 
   public async setPni(pni: string): Promise<void> {
+    log.info(`保存用户pni:${pni}`);
     await this.storage.put('pni', UUID.cast(pni));
   }
 
@@ -109,6 +116,7 @@ export class User {
   }
 
   public getDeviceName(): string | undefined {
+    log.info('获取设备名称');
     return this.storage.get('device_name');
   }
 
@@ -121,12 +129,14 @@ export class User {
   }
 
   public async removeSignalingKey(): Promise<void> {
+    log.info('删除signaling_key');
     return this.storage.remove('signaling_key');
   }
 
   public async setCredentials(
     credentials: SetCredentialsOptions
   ): Promise<void> {
+    log.info('设置用户凭证(登陆信息)');
     const { uuid, pni, number, deviceId, deviceName, password } = credentials;
 
     await Promise.all([
@@ -141,7 +151,7 @@ export class User {
   }
 
   public async removeCredentials(): Promise<void> {
-    log.info('storage.user: removeCredentials');
+    log.info('删除用户凭证信息');
 
     await Promise.all([
       this.storage.remove('number_id'),
@@ -152,10 +162,14 @@ export class User {
   }
 
   public getWebAPICredentials(): WebAPICredentials {
+    log.info('获取用户WebAPI的凭证信息');
+    const UserName =
+      this.storage.get('uuid_id') || this.storage.get('number_id') || '';
+    const PassWord = this.storage.get('password', '');
+    log.info(`username:${UserName};password:${PassWord}`);
     return {
-      username:
-        this.storage.get('uuid_id') || this.storage.get('number_id') || '',
-      password: this.storage.get('password', ''),
+      username: UserName,
+      password: PassWord,
     };
   }
 

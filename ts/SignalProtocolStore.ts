@@ -5,6 +5,8 @@ import PQueue from 'p-queue';
 import { isNumber } from 'lodash';
 import { z } from 'zod';
 
+// 非常像是消息加密中的公私钥部分，各种公钥 私钥 ， 前向秘钥等等
+
 import {
   Direction,
   PreKeyRecord,

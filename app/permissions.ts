@@ -19,7 +19,8 @@ const PERMISSIONS: Record<string, boolean> = {
   // Not allowed
   geolocation: false,
   midiSysex: false,
-  openExternal: false, // we don't need this; we open links via 'will-navigate' event
+  // 请求在外部程序中打开的链接[openExternal原本是false]
+  openExternal: true, // we don't need this; we open links via 'will-navigate' event
   pointerLock: false,
 };
 

@@ -72,6 +72,7 @@ export type OuterSignedPrekeyType = {
 
 export type SessionResetsType = Record<string, number>;
 
+// 已处理的信封消息
 export type ProcessedEnvelope = Readonly<{
   id: string;
   receivedAtCounter: number;
@@ -92,6 +93,7 @@ export type ProcessedEnvelope = Readonly<{
   groupId?: string;
 }>;
 
+// 已处理的附件
 export type ProcessedAttachment = {
   cdnId?: string;
   cdnKey?: string;
@@ -108,6 +110,7 @@ export type ProcessedAttachment = {
   cdnNumber?: number;
 };
 
+// 已处理的群组文本
 export type ProcessedGroupContext = {
   id: string;
   type: Proto.GroupContext.Type;
@@ -119,6 +122,7 @@ export type ProcessedGroupContext = {
   derivedGroupV2Id: string;
 };
 
+// 已处理的v2群组文本
 export type ProcessedGroupV2Context = {
   masterKey: string;
   revision?: number;
@@ -133,6 +137,7 @@ export type ProcessedGroupV2Context = {
 export type ProcessedQuoteAttachment = {
   contentType?: string;
   fileName?: string;
+  // 缩略图？
   thumbnail?: ProcessedAttachment;
 };
 
@@ -144,11 +149,13 @@ export type ProcessedQuote = {
   bodyRanges: ReadonlyArray<Proto.DataMessage.IBodyRange>;
 };
 
+// 头像
 export type ProcessedAvatar = {
   avatar?: ProcessedAttachment;
   isProfile: boolean;
 };
 
+// 联系人
 export type ProcessedContact = Omit<Proto.DataMessage.IContact, 'avatar'> & {
   avatar?: ProcessedAvatar;
 };

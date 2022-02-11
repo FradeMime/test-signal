@@ -14,8 +14,8 @@ import { SignalService as Proto } from '../protobuf';
 import * as Crypto from '../Crypto';
 
 describe('MessageReceiver', () => {
-  const number = '+19999999999';
-  const uuid = 'aaaaaaaa-bbbb-4ccc-9ddd-eeeeeeeeeeee';
+  const number = '+19999999999'; // 'sms' or 'google voice'
+  const uuid = 'aaaaaaaa-bbbb-4ccc-9ddd-eeeeeeeeeeee'; // 4-2-2-8
   const deviceId = 1;
 
   let oldUuid: string | undefined;

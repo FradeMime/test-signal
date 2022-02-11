@@ -43,6 +43,7 @@ export type SocketManagerOptions = Readonly<{
 //
 // - Authenticated WebSocketResource which uses supplied WebAPICredentials and
 //   automatically reconnects on closed socket (using back off)
+//   authenticated websocket连接 使用经过身份验证的webapicredential 且支持自动断线重连
 // - Unauthenticated WebSocketResource that is created on the first outgoing
 //   unauthenticated request and is periodically rotated (5 minutes since first
 //   activity on the socket).
@@ -50,7 +51,9 @@ export type SocketManagerOptions = Readonly<{
 // Incoming requests on authenticated resource are funneled into the registered
 // request handlers (`registerRequestHandler`) or queued internally until at
 // least one such request handler becomes available.
+// authenticated websocket    request    registerRequestHandler
 //
+// WebSocketResource 负责对未经身份验证的请求进行终止操作
 // Incoming requests on unauthenticated resource are not currently supported.
 // WebSocketResource is responsible for their immediate termination.
 export class SocketManager extends EventListener {
@@ -64,6 +67,7 @@ export class SocketManager extends EventListener {
 
   private unauthenticatedExpirationTimer?: NodeJS.Timeout;
 
+  // username password
   private credentials?: WebAPICredentials;
 
   private readonly proxyAgent?: ReturnType<typeof ProxyAgent>;
@@ -91,6 +95,7 @@ export class SocketManager extends EventListener {
   // Update WebAPICredentials and reconnect authenticated resource if
   // credentials changed
   public async authenticate(credentials: WebAPICredentials): Promise<void> {
+    log.info('WebAPI 凭证登陆初始化');
     if (this.isOffline) {
       throw new HTTPError('SocketManager offline', {
         code: 0,
@@ -123,11 +128,12 @@ export class SocketManager extends EventListener {
     }
 
     this.credentials = credentials;
-
-    log.info('SocketManager: connecting authenticated socket');
-
     this.setStatus(SocketStatus.CONNECTING);
 
+    // ws://124.232.156.201:28810/v1/websocket/?login=+12345678901.1&password=123456
+    // 合理的应该是
+    // ws://Url:Port/v1/websocket/?login=+936ccb79-90c0-4084-aa5b-3bf366c97f27.1&password=123456
+    // login=+username.deviceId&password=pwd
     const process = this.connectResource({
       name: 'authenticated',
       path: '/v1/websocket/',
@@ -139,13 +145,14 @@ export class SocketManager extends EventListener {
         },
       },
     });
-
+    log.info('ws试图建立连接后');
     // Cancel previous connect attempt or close socket
     this.authenticated?.abort();
-
+    // ws client对象
     this.authenticated = process;
 
     const reconnect = async (): Promise<void> => {
+      log.info('reconnect');
       const timeout = this.backOff.getAndIncrement();
 
       log.info(
@@ -181,8 +188,9 @@ export class SocketManager extends EventListener {
     try {
       authenticated = await process.getResult();
       this.setStatus(SocketStatus.OPEN);
+      log.info('SocketStatus状态:OPEN');
     } catch (error) {
-      log.warn(
+      log.info(
         'SocketManager: authenticated socket connection failed with ' +
           `error: ${Errors.toLogFormat(error)}`
       );
@@ -218,6 +226,8 @@ export class SocketManager extends EventListener {
     this.backOff.reset();
 
     authenticated.addEventListener('close', ({ code, reason }): void => {
+      log.info('SocketManager: authenticated直接return');
+      // return;
       if (this.authenticated !== process) {
         return;
       }
@@ -240,7 +250,9 @@ export class SocketManager extends EventListener {
   // Either returns currently connecting/active authenticated
   // WebSocketResource or connects a fresh one.
   public async getAuthenticatedResource(): Promise<WebSocketResource> {
+    log.info('getAuthenticatedResource');
     if (!this.authenticated) {
+      log.info('!this.authenticated');
       strictAssert(this.credentials !== undefined, 'Missing credentials');
       await this.authenticate(this.credentials);
     }
@@ -269,11 +281,15 @@ export class SocketManager extends EventListener {
   // websocket resources. This wrapper supports only limited number of features
   // of node-fetch despite being API compatible.
   public async fetch(url: string, init: RequestInit): Promise<Response> {
+    log.info('fetch获取为认证的资源');
     const headers = new Headers(init.headers);
 
     let resource: WebSocketResource;
     if (this.isAuthenticated(headers)) {
+      log.info('获取认证成功');
+      log.info(`headers:${JSON.stringify(headers)}`);
       resource = await this.getAuthenticatedResource();
+      log.info('获取WebSocketResource句柄');
     } else {
       resource = await this.getUnauthenticatedResource();
       await this.startUnauthenticatedExpirationTimer(resource);
@@ -281,7 +297,7 @@ export class SocketManager extends EventListener {
 
     const { path } = URL.parse(url);
     strictAssert(path, "Fetch can't have empty path");
-
+    log.info(`_fetch path:${path};url:${url}`);
     const { method = 'GET', body, timeout } = init;
 
     let bodyBytes: Uint8Array | undefined;
@@ -296,7 +312,7 @@ export class SocketManager extends EventListener {
     } else {
       throw new Error(`Unsupported body type: ${typeof body}`);
     }
-
+    log.info('');
     const {
       status,
       message: statusText,
@@ -482,9 +498,11 @@ export class SocketManager extends EventListener {
       version: this.options.version,
       ...query,
     };
-
+    log.info('connectResource函数');
+    log.info(`参数：name:${name};path:${path}`);
     const url = `${this.options.url}${path}?${qs.encode(queryWithDefaults)}`;
-
+    log.info(`参数：url:${url}`);
+    // connectWebSocket真实网络连接代码
     return connectWebSocket({
       name,
       url,
@@ -583,6 +601,7 @@ export class SocketManager extends EventListener {
   }
 
   private queueOrHandleRequest(req: IncomingWebSocketRequest): void {
+    log.info('queueOrHandleRequest..');
     if (this.requestHandlers.size === 0) {
       this.incomingRequestQueue.push(req);
       log.info(
@@ -604,7 +623,9 @@ export class SocketManager extends EventListener {
   }
 
   private isAuthenticated(headers: Headers): boolean {
+    log.info('isAuthenticated判断');
     if (!this.credentials) {
+      log.info('未认证');
       return false;
     }
 
@@ -623,7 +644,10 @@ export class SocketManager extends EventListener {
       ':',
       2
     );
-
+    log.info(
+      `认证判断username:${this.credentials.username};
+      password:${this.credentials.password}`
+    );
     return (
       username === this.credentials.username &&
       password === this.credentials.password

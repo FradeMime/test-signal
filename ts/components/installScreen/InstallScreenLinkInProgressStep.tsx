@@ -19,7 +19,9 @@ export const InstallScreenLinkInProgressStep = ({
     <InstallScreenSignalLogo />
 
     <Spinner size="50px" svgSize="normal" />
+    {/* 正在同步联系人和群组 */}
     <h1>{i18n('initialSync')}</h1>
+    {/* 聊天记录不会同步到此设备 */}
     <h2>{i18n('initialSync__subtitle')}</h2>
   </div>
 );

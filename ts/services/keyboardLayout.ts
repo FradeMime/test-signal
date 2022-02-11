@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { strictAssert } from '../util/assert';
+import * as log from '../logging/log';
 
 type LayoutMapType = { get(code: string): string | undefined };
 
 let layoutMap: LayoutMapType | undefined;
 
 export async function initialize(): Promise<void> {
+  log.info('键盘布局初始化');
   strictAssert(layoutMap === undefined, 'keyboardLayout already initialized');
 
   const experimentalNavigator = window.navigator as unknown as {

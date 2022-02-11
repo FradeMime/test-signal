@@ -5,6 +5,7 @@ import type { RequestInit, Response } from 'node-fetch';
 import type { AbortSignal as AbortSignalForNodeFetch } from 'abort-controller';
 
 import type { MIMEType } from '../types/MIME';
+
 import {
   IMAGE_GIF,
   IMAGE_ICO,
@@ -78,6 +79,7 @@ async function fetchWithRedirects(
   href: string,
   options: RequestInit
 ): Promise<Response> {
+  log.info('fetchWithRedirects函数');
   const urlsSeen = new Set<string>();
 
   let nextHrefToLoad = href;
@@ -108,6 +110,10 @@ async function fetchWithRedirects(
     }
 
     const newUrl = maybeParseUrl(location, nextHrefToLoad);
+    log.info(`newUrl:${newUrl}`);
+    log.info(
+      `newurl.protocol=${newUrl?.protocol};newurl.hostname=${newUrl?.hostname}`
+    );
     if (newUrl?.protocol !== 'https:') {
       log.warn(
         'fetchWithRedirects: got a redirect status code and an invalid Location header'

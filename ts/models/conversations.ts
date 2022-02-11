@@ -4738,6 +4738,7 @@ export class ConversationModel extends window.Backbone
     }
   }
 
+  // 需要的情况下 派生访问秘钥
   async deriveAccessKeyIfNeeded(): Promise<void> {
     const profileKey = this.get('profileKey');
     if (!profileKey) {

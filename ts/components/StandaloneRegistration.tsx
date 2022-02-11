@@ -1,13 +1,14 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-
+// 号码注册界面
 import type { ChangeEvent } from 'react';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Plugin } from 'intl-tel-input';
 import intlTelInput from 'intl-tel-input';
 
 import { strictAssert } from '../util/assert';
-import { getChallengeURL } from '../challenge';
+// import { getChallengeURL } from '../challenge';
+// import { contextIsolated } from 'process';
 
 const PhoneInput = ({
   onValidation,
@@ -118,6 +119,7 @@ export const StandaloneRegistration = ({
   const [error, setError] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string | undefined>(undefined);
 
+  // sms和voice两种情况
   const onRequestCode = useCallback(
     async (type: 'sms' | 'voice') => {
       if (!isValidNumber) {
@@ -129,10 +131,10 @@ export const StandaloneRegistration = ({
         setError(undefined);
         return;
       }
-
-      document.location.href = getChallengeURL();
-      const token = await window.Signal.challengeHandler.requestCaptcha();
-
+      // 加载校验
+      // document.location.href = getChallengeURL();
+      // const token = await window.Signal.challengeHandler.requestCaptcha();
+      const token = 'caoqiuleiTest_jhjidoiajoijvas';
       try {
         requestVerification(type, number, token);
         setError(undefined);
@@ -143,6 +145,7 @@ export const StandaloneRegistration = ({
     [isValidNumber, setIsValidNumber, setError, requestVerification, number]
   );
 
+  // "Send SMS" 按钮
   const onSMSClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
@@ -226,7 +229,7 @@ export const StandaloneRegistration = ({
                 disabled={!isValidNumber}
                 onClick={onSMSClick}
               >
-                Send SMS
+                Send SMS 请注册v1
               </button>
               <button
                 type="button"

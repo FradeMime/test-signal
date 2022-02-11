@@ -529,6 +529,7 @@ async function getUpdateYaml(): Promise<string> {
   return body;
 }
 
+// Options 含有证书参数
 function getGotOptions(): GotOptions {
   const certificateAuthority = getCertificateAuthority();
   const proxyUrl = getProxyUrl();

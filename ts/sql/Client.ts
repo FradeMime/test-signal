@@ -353,7 +353,8 @@ async function startInRendererProcess(isTesting = false): Promise<void> {
 
   const configDir = await getRealPath(ipc.sendSync('get-user-data-path'));
   const key = ipc.sendSync('user-config-key');
-
+  log.info(`sqlcipher configDir:${configDir}`);
+  log.info(`cqlcipher key :${key}`);
   await Server.initializeRenderer({ configDir, key });
 
   log.info('data.startInRendererProcess: switched to renderer process');

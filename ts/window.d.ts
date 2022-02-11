@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 // Captures the globals put in place by preload.js, background.js and others
-
+// 貌似是注册所有功能函数用的
 import { DeepPartial, Store } from 'redux';
 import * as Backbone from 'backbone';
 import * as Underscore from 'underscore';
@@ -437,7 +437,7 @@ declare global {
       Views: WhatIsThis;
       State: {
         createStore: typeof createStore;
-        Roots: {
+        Roots: { // 下面是界面部分
           createApp: typeof createApp;
           createChatColorPicker: typeof createChatColorPicker;
           createConversationDetails: typeof createConversationDetails;

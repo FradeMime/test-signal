@@ -199,12 +199,15 @@ export async function startApp(): Promise<void> {
   // Initialize WebAPI as early as possible
   let server: WebAPIType | undefined;
   let messageReceiver: MessageReceiver | undefined;
+  log.info('Initialize WebAPI as early as possible');
   window.storage.onready(() => {
+    log.info('WebAPI建立连接');
     server = window.WebAPI.connect(
       window.textsecure.storage.user.getWebAPICredentials()
     );
     window.textsecure.server = server;
 
+    // 初始化作业队列
     initializeAllJobQueues({
       server,
     });
@@ -432,6 +435,7 @@ export async function startApp(): Promise<void> {
   startInteractionMode();
 
   // Load these images now to ensure that they don't flicker on first use
+  // 图像资源预加载
   window.preloadedImages = [];
   function preload(list: ReadonlyArray<string>) {
     for (let index = 0, max = list.length; index < max; index += 1) {
@@ -479,6 +483,7 @@ export async function startApp(): Promise<void> {
     }
     return server.getSocketStatus();
   };
+  // log.info(`background socketStatus:${window.getSocketStatus}`);
   let accountManager: typeof window.textsecure.AccountManager;
   window.getAccountManager = () => {
     if (accountManager) {
@@ -611,6 +616,7 @@ export async function startApp(): Promise<void> {
 
         // A number of still-to-queue database queries might be waiting inside batchers.
         //   We wait for these to empty first, and then shut down the data interface.
+        log.info('bg waitForAllBatchers和waitForAllWaitBatchers');
         await Promise.all([
           window.waitForAllBatchers(),
           window.waitForAllWaitBatchers(),
@@ -630,7 +636,7 @@ export async function startApp(): Promise<void> {
 
     const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
     if (lastHeartbeat > 0 && isOlderThan(lastHeartbeat, THIRTY_DAYS)) {
-      log.warn(
+      log.info(
         `This instance has not been used for 30 days. Last heartbeat: ${lastHeartbeat}. Last startup: ${previousLastStartup}.`
       );
       await unlinkAndDisconnect(RemoveAllConfiguration.Soft);
@@ -749,6 +755,7 @@ export async function startApp(): Promise<void> {
     }
 
     try {
+      log.info('bg startInRendererProcess');
       await window.Signal.Data.startInRendererProcess();
     } catch (err) {
       log.error('SQL failed to initialize', err && err.stack ? err.stack : err);
@@ -756,6 +763,7 @@ export async function startApp(): Promise<void> {
 
     Views.Initialization.setMessage(window.i18n('loading'));
 
+    // 版本迁移？
     let isMigrationWithIndexComplete = false;
     log.info(
       `Starting background data migration. Target version: ${Message.CURRENT_SCHEMA_VERSION}`
@@ -863,6 +871,7 @@ export async function startApp(): Promise<void> {
     }, FIVE_MINUTES);
 
     try {
+      log.info('bg window.ConversationController.load');
       await Promise.all([
         window.ConversationController.load(),
         Stickers.load(),
@@ -877,6 +886,7 @@ export async function startApp(): Promise<void> {
         error && error.stack ? error.stack : error
       );
     } finally {
+      log.info('bg finally');
       initializeRedux();
       start();
       window.Signal.Services.initializeNetworkObserver(
@@ -1622,6 +1632,7 @@ export async function startApp(): Promise<void> {
   let challengeHandler: ChallengeHandler | undefined;
 
   async function start() {
+    log.info('bg start');
     challengeHandler = new ChallengeHandler({
       storage: window.storage,
 
@@ -1638,14 +1649,17 @@ export async function startApp(): Promise<void> {
       onChallengeFailed() {
         // TODO: DESKTOP-1530
         // Display humanized `retryAfter`
+        log.info('onChallengeFailed');
         showToast(ToastCaptchaFailed);
       },
 
       onChallengeSolved() {
+        log.info('onChallengeSolved');
         showToast(ToastCaptchaSolved);
       },
 
       setChallengeStatus(challengeStatus) {
+        log.info('setChallengeStatus');
         window.reduxActions.network.setChallengeStatus(challengeStatus);
       },
     });
@@ -1664,13 +1678,14 @@ export async function startApp(): Promise<void> {
     window.Signal.challengeHandler = challengeHandler;
 
     if (!window.storage.user.getNumber()) {
-      const ourConversation =
-        window.ConversationController.getOurConversation();
-      const ourE164 = ourConversation?.get('e164');
-      if (ourE164) {
-        log.warn('Restoring E164 from our conversation');
-        window.storage.user.setNumber(ourE164);
-      }
+      log.info('bg !window.storage.user.getNumber');
+      // const ourConversation =
+      //   window.ConversationController.getOurConversation();
+      // const ourE164 = ourConversation?.get('e164');
+      // if (ourE164) {
+      //   log.warn('Restoring E164 from our conversation');
+      //   window.storage.user.setNumber(ourE164);
+      // }
     }
 
     window.dispatchEvent(new Event('storage_ready'));
@@ -1748,7 +1763,9 @@ export async function startApp(): Promise<void> {
       connect();
       window.reduxActions.app.openInbox();
     } else {
-      window.reduxActions.app.openInstaller();
+      // window.reduxActions.app.openInstaller();
+      // 注册加载页面为 独立设备 跳过二维码
+      window.reduxActions.app.openStandalone();
     }
 
     window.Whisper.events.on('contactsync', () => {
@@ -1855,7 +1872,7 @@ export async function startApp(): Promise<void> {
         await window.storage.remove('manifestVersion');
 
         if (window.ConversationController.areWePrimaryDevice()) {
-          log.warn(
+          log.info(
             'onChange/desktop.storage: We are primary device; not sending key sync request'
           );
           return;
@@ -1876,7 +1893,7 @@ export async function startApp(): Promise<void> {
 
   window.getSyncRequest = (timeoutMillis?: number) => {
     strictAssert(messageReceiver, 'MessageReceiver not initialized');
-
+    log.info('bg window.getSyncRequest');
     const syncRequest = new window.textsecure.SyncRequest(
       window.textsecure.messaging,
       messageReceiver,
@@ -1952,6 +1969,7 @@ export async function startApp(): Promise<void> {
   let connectCount = 0;
   let connecting = false;
   async function connect(firstRun?: boolean) {
+    log.info('猜测是连接');
     if (connecting) {
       log.warn('connect already running', { connectCount });
       return;
@@ -1990,6 +2008,7 @@ export async function startApp(): Promise<void> {
 
       // Update our profile key in the conversation if we just got linked.
       const profileKey = await ourProfileKeyService.get();
+      log.info(`获取profileKey:${profileKey}`);
       if (firstRun && profileKey) {
         const me = window.ConversationController.getOurConversation();
         strictAssert(me !== undefined, "Didn't find newly created ourselves");

@@ -145,6 +145,7 @@ let sqlInitTimeEnd = 0;
 
 let appStartInitialSpellcheckSetting = true;
 
+// 默认是否启动"开发者工具"界面
 const defaultWebPrefs = {
   devTools:
     process.argv.some(arg => arg === '--enable-dev-tools') ||
@@ -155,7 +156,9 @@ const defaultWebPrefs = {
 async function getSpellCheckSetting() {
   const fastValue = ephemeralConfig.get('spell-check');
   if (fastValue !== undefined) {
-    getLogger().info('got fast spellcheck setting', fastValue);
+    // 获得快速拼写检查设置
+    // getLogger().info('got fast spellcheck setting', fastValue);
+    getLogger().info('获得快速拼写检查设置', fastValue);
     return fastValue;
   }
 
@@ -172,6 +175,7 @@ async function getSpellCheckSetting() {
 }
 
 function showWindow() {
+  getLogger().info('展示窗口 showWindow');
   if (!mainWindow) {
     return;
   }
@@ -193,6 +197,7 @@ function showWindow() {
 
 if (!process.mas) {
   console.log('making app single instance');
+  // 确保只能启动一次
   const gotLock = app.requestSingleInstanceLock();
   if (!gotLock) {
     console.log('quitting; we are the second instance');
@@ -234,6 +239,7 @@ if (!process.mas) {
 
 const windowFromUserConfig = userConfig.get('window');
 const windowFromEphemeral = ephemeralConfig.get('window');
+// 窗口参数属性
 export const windowConfigSchema = z.object({
   maximized: z.boolean().optional(),
   autoHideMenuBar: z.boolean().optional(),
@@ -289,6 +295,7 @@ function prepareFileUrl(
   return prepareUrl(fileUrl, moreKeys);
 }
 
+// 初始化配置文件内的URL参数
 function prepareUrl(
   url: URL,
   moreKeys?: undefined | Record<string, unknown>
@@ -330,16 +337,22 @@ function prepareUrl(
   }).href;
 }
 
+// 限制自定义协议导致的安全问题
 async function handleUrl(event: Electron.Event, target: string) {
+  getLogger().info('自定义协议限制');
   event.preventDefault();
   const parsedUrl = maybeParseUrl(target);
   if (!parsedUrl) {
     return;
   }
-
   const { protocol, hostname } = parsedUrl;
+  getLogger().info(
+    'isDevServer: signal_enable_http:',
+    process.env.SIGNAL_ENABLE_HTTP
+  );
+  getLogger().info('isDevServer: hostname:', hostname);
   const isDevServer =
-    process.env.SIGNAL_ENABLE_HTTP && hostname === 'localhost';
+    process.env.SIGNAL_ENABLE_HTTP && hostname === '124.232.156.201';
   // We only want to specially handle urls that aren't requesting the dev server
   if (
     isSgnlHref(target, getLogger()) ||
@@ -359,6 +372,7 @@ async function handleUrl(event: Electron.Event, target: string) {
 }
 
 function handleCommonWindowEvents(window: BrowserWindow) {
+  getLogger().info('will-navigate触发事件');
   window.webContents.on('will-navigate', handleUrl);
   window.webContents.on('new-window', handleUrl);
   window.webContents.on(
@@ -372,6 +386,7 @@ function handleCommonWindowEvents(window: BrowserWindow) {
   window.on('closed', () => activeWindows.delete(window));
 
   // Works only for mainWindow because it has `enablePreferredSizeMode`
+  // 当前缩放系数
   let lastZoomFactor = window.webContents.getZoomFactor();
   const onZoomChanged = () => {
     if (
@@ -450,6 +465,7 @@ if (OS.isWindows()) {
   windowIcon = join(__dirname, '../build/icons/png/512x512.png');
 }
 
+// importent
 async function createWindow() {
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     show: false,
@@ -457,7 +473,7 @@ async function createWindow() {
     height: DEFAULT_HEIGHT,
     minWidth: MIN_WIDTH,
     minHeight: MIN_HEIGHT,
-    autoHideMenuBar: false,
+    autoHideMenuBar: false, // 状态栏是否隐藏
     titleBarStyle:
       getTitleBarVisibility() === TitleBarVisibility.Hidden &&
       !isTestEnvironment(getEnvironment())
@@ -471,7 +487,11 @@ async function createWindow() {
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
       contextIsolation: false,
+      // allowRunningInsecureContent 和 webSecurity是后续添加
+      webSecurity: false,
+      allowRunningInsecureContent: true,
       preload: join(
+        // 预加载
         __dirname,
         enableCI || getEnvironment() === Environment.Production
           ? '../preload.bundle.js'
@@ -547,6 +567,7 @@ async function createWindow() {
     systemTrayService.setMainWindow(mainWindow);
   }
 
+  // 捕获 保存窗口信息
   function captureAndSaveWindowStats() {
     if (!mainWindow) {
       return;
@@ -716,6 +737,7 @@ async function createWindow() {
   });
 }
 
+// 数据库是否已初始化完成
 // Renderer asks if we are done with the database
 ipc.on('database-ready', async event => {
   if (!sqlInitPromise) {
@@ -961,6 +983,8 @@ function showScreenShareWindow(sourceName: string) {
       ...defaultWebPrefs,
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
+      webSecurity: false,
+      allowRunningInsecureContent: true,
       contextIsolation: true,
       preload: join(__dirname, '../ts/windows/screenShare/preload.js'),
     },
@@ -1008,6 +1032,8 @@ function showAbout() {
       ...defaultWebPrefs,
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
+      webSecurity: false,
+      allowRunningInsecureContent: true,
       contextIsolation: true,
       preload: join(__dirname, '../ts/windows/about/preload.js'),
       nativeWindowOpen: true,
@@ -1051,6 +1077,8 @@ function showSettingsWindow() {
       ...defaultWebPrefs,
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
+      webSecurity: false,
+      allowRunningInsecureContent: true,
       contextIsolation: true,
       preload: join(__dirname, '../ts/windows/settings/preload.js'),
       nativeWindowOpen: true,
@@ -1121,18 +1149,20 @@ async function showStickerCreator() {
       ...defaultWebPrefs,
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
+      webSecurity: false,
+      allowRunningInsecureContent: true,
       contextIsolation: false,
       preload: join(__dirname, '../sticker-creator/preload.js'),
       nativeWindowOpen: true,
       spellcheck: await getSpellCheckSetting(),
     },
   };
-
+  getLogger().info('sticker window函数 Options');
   stickerCreatorWindow = createBrowserWindow(options);
   setupSpellChecker(stickerCreatorWindow, getLocale().messages);
 
   handleCommonWindowEvents(stickerCreatorWindow);
-
+  getLogger().info('sticker函数,ENABLE_HTTP=', process.env.SIGNAL_ENABLE_HTTP);
   const appUrl = process.env.SIGNAL_ENABLE_HTTP
     ? prepareUrl(
         new URL('http://localhost:6380/sticker-creator/dist/index.html')
@@ -1182,6 +1212,8 @@ async function showDebugLogWindow() {
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
       contextIsolation: true,
+      webSecurity: false,
+      allowRunningInsecureContent: true,
       preload: join(__dirname, '../ts/windows/debuglog/preload.js'),
       nativeWindowOpen: true,
     },
@@ -1239,6 +1271,8 @@ function showPermissionsPopupWindow(forCalling: boolean, forCamera: boolean) {
         nodeIntegration: false,
         nodeIntegrationInWorker: false,
         contextIsolation: true,
+        webSecurity: false,
+        allowRunningInsecureContent: true,
         preload: join(__dirname, '../ts/windows/permissions/preload.js'),
         nativeWindowOpen: true,
       },
@@ -1353,6 +1387,7 @@ const onDatabaseError = async (error: string) => {
   app.exit(1);
 };
 
+// 数据库异常时处理
 const runSQLCorruptionHandler = async () => {
   // This is a glorified event handler. Normally, this promise never resolves,
   // but if there is a corruption error triggered by any query that we run
@@ -1378,6 +1413,7 @@ ipc.on('database-error', (_event: Electron.Event, error: string) => {
   onDatabaseError(error);
 });
 
+// 窗口初始化后 初始化部分API
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -1400,6 +1436,7 @@ app.on('ready', async () => {
   settingsChannel = new SettingsChannel();
   settingsChannel.install();
 
+  // 使用事件记录应用启动时间
   // We use this event only a single time to log the startup time of the app
   // from when it's first ready until the loading screen disappears.
   ipc.once('signal-app-loaded', (event, info) => {
@@ -1441,15 +1478,24 @@ app.on('ready', async () => {
       isWindows: OS.isWindows(),
     });
   }
-
+  getLogger().info('installWebHandler enableHttp测试');
+  // 初始化HTTP或者HTTPS？
   installWebHandler({
-    enableHttp: Boolean(process.env.SIGNAL_ENABLE_HTTP),
+    // enableHttp: Boolean(process.env.SIGNAL_ENABLE_HTTP),
+    // enableHttp: false,
+    enableHttp: true,
     protocol: electronProtocol,
   });
+
+  // installWebHandler({
+  //   enableHttp: Boolean(process.env.SIGNAL_ENABLE_HTTP),
+  //   protocol: electronProtocol,
+  // });
 
   logger.info('app ready');
   logger.info(`starting version ${packageJson.version}`);
 
+  // 日志帮助调试用户损坏设备的报告
   // This logging helps us debug user reports about broken devices.
   {
     let getMediaAccessStatus;
@@ -1469,6 +1515,7 @@ app.on('ready', async () => {
 
   GlobalErrors.updateLocale(locale.messages);
 
+  // 如果数据库初始化时间超过3秒，会有一个用户通知
   // If the sql initialization takes more than three seconds to complete, we
   // want to notify the user that things are happening
   const timeout = new Promise(resolve => setTimeout(resolve, 3000, 'timeout'));
@@ -1493,6 +1540,8 @@ app.on('ready', async () => {
         ...defaultWebPrefs,
         nodeIntegration: false,
         contextIsolation: true,
+        webSecurity: false,
+        allowRunningInsecureContent: true,
         preload: join(__dirname, '../ts/windows/loading/preload.js'),
       },
       icon: windowIcon,
@@ -1508,7 +1557,7 @@ app.on('ready', async () => {
       loadingWindow.destroy();
       loadingWindow = undefined;
     });
-
+    // 绑定本地HTML文件
     loadingWindow.loadURL(prepareFileUrl([__dirname, '../loading.html']));
   });
 
@@ -1537,6 +1586,7 @@ app.on('ready', async () => {
     },
   });
 
+  // 和数据库初始化并行运行的窗口预加载
   // Run window preloading in parallel with database initialization.
   await createWindow();
 
@@ -1550,6 +1600,7 @@ app.on('ready', async () => {
   }
 
   // eslint-disable-next-line more/no-then
+  getLogger().info('app.on ready getSpellCheckSetting');
   appStartInitialSpellcheckSetting = await getSpellCheckSetting();
 
   try {
@@ -1684,6 +1735,7 @@ async function requestShutdown() {
 
     mainWindow.webContents.send('get-ready-for-shutdown');
 
+    // 我们将等待2分钟，然后强制关闭。date.js的SQL任务也是2分钟超时设置。
     // We'll wait two minutes, then force the app to go down. This can happen if someone
     //   exits the app before we've set everything up in preload() (so the browser isn't
     //   yet listening for these events), or if there are a whole lot of stacked-up tasks.
@@ -2010,7 +2062,7 @@ function handleSgnlHref(incomingHref: string) {
   let command;
   let args;
   let hash;
-
+  getLogger().info('handleSnlHref函数');
   if (isSgnlHref(incomingHref, getLogger())) {
     ({ command, args, hash } = parseSgnlHref(incomingHref, getLogger()));
   } else if (isSignalHttpsLink(incomingHref, getLogger())) {

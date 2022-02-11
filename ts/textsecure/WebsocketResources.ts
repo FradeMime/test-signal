@@ -5,13 +5,14 @@
 /*
  * WebSocket-Resources
  *
+ * 在websocket上层创建一个请求/相应接口 使用子协议
  * Create a request-response interface over websockets using the
- * WebSocket-Resources sub-protocol[1].
+ * WebSocket-Resources sub-protocol[1]. 子协议
  *
  * var client = new WebSocketResource(socket, function(request) {
  *    request.respond(200, 'OK');
  * });
- *
+ * 连接成功会后发送聊天数据的地方
  * const { response, status } = await client.sendRequest({
  *    verb: 'PUT',
  *    path: '/v1/messages',
@@ -61,6 +62,11 @@ export class IncomingWebSocketRequest {
     strictAssert(request.verb, 'request without verb');
     strictAssert(request.path, 'request without path');
 
+    log.info('IncomingWebSocketRequest 初始化');
+    log.info(
+      `request id=${request.id};verb=${request.verb};path=${request.path}`
+    );
+
     this.id = request.id;
     this.verb = request.verb;
     this.path = request.path;
@@ -69,6 +75,7 @@ export class IncomingWebSocketRequest {
   }
 
   public respond(status: number, message: string): void {
+    log.info('websocketresources respond');
     const bytes = Proto.WebSocketMessage.encode({
       type: Proto.WebSocketMessage.Type.RESPONSE,
       response: { id: this.id, message, status },
@@ -172,15 +179,18 @@ export default class WebSocketResource extends EventTarget {
     return super.addEventListener(name, handler);
   }
 
+  // 登陆成功后，基于已建立的ws连接发送 数据包
   public async sendRequest(
     options: SendRequestOptions
   ): Promise<SendRequestResult> {
+    log.info('sendRequest函数内');
     const id = this.outgoingId;
     strictAssert(!this.outgoingMap.has(id), 'Duplicate outgoing request');
 
     // eslint-disable-next-line no-bitwise
     this.outgoingId = Math.max(1, (this.outgoingId + 1) & 0x7fffffff);
-
+    log.info(`sendRequest id:${id};outgoingId:${this.outgoingId}`);
+    log.info(`sendRequest options:${JSON.stringify(options)}`);
     const bytes = Proto.WebSocketMessage.encode({
       type: Proto.WebSocketMessage.Type.REQUEST,
       request: {
@@ -197,6 +207,7 @@ export default class WebSocketResource extends EventTarget {
     );
 
     strictAssert(!this.shuttingDown, 'Cannot send request, shutting down');
+    log.info('addActive');
     this.addActive(id);
     const promise = new Promise<SendRequestResult>((resolve, reject) => {
       let timer = options.timeout
@@ -216,7 +227,10 @@ export default class WebSocketResource extends EventTarget {
         resolve(result);
       });
     });
-
+    // eslint-disable-next-line camelcase
+    const log_str = new TextDecoder().decode(bytes);
+    // eslint-disable-next-line camelcase
+    log.info(`ws发送数据包:${log_str}`);
     this.socket.sendBytes(Buffer.from(bytes));
 
     return promise;

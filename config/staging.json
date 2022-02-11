@@ -1,4 +1,5 @@
 {
   "storageProfile": "staging",
-  "openDevTools": true
+  "openDevTools": true,
+  "SIGNAL_ENABLE_HTTP": "hello"
 }

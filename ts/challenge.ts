@@ -1,6 +1,8 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
+// 谷歌认证界面  图片认证等两种
+
 // `ChallengeHandler` is responsible for:
 // 1. tracking the messages that failed to send with 428 error and could be
 //    retried when user solves the challenge
@@ -92,7 +94,10 @@ type TrackedEntry = {
 
 const DEFAULT_EXPIRE_AFTER = 24 * 3600 * 1000; // one day
 const MAX_RETRIES = 5;
+// captcha 验证码
 const CAPTCHA_URL = 'https://signalcaptchas.org/challenge/generate.html';
+// const CAPTCHA_URL =
+//   'https://signalcaptchas.org/staging/challenge/generate.html';
 const CAPTCHA_STAGING_URL =
   'https://signalcaptchas.org/staging/challenge/generate.html';
 
@@ -106,9 +111,12 @@ function shouldRetrySend(message: MinimalMessage): boolean {
 }
 
 export function getChallengeURL(): string {
+  log.info('getChallengeURL');
   if (getEnvironment() === Environment.Staging) {
+    log.info('environment.staging captcha_staging_url');
     return CAPTCHA_STAGING_URL;
   }
+  log.info('captcha_url');
   return CAPTCHA_URL;
 }
 

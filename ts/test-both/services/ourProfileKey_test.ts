@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { assert } from 'chai';
-import * as sinon from 'sinon';
+import * as sinon from 'sinon'; // 测试模块
 import { noop } from 'lodash';
 import { sleep } from '../../util/sleep';
 
@@ -19,6 +19,7 @@ describe('"our profile key" service', () => {
 
   describe('get', () => {
     it("fetches the key from storage if it's there", async () => {
+      // 从存储中获取秘钥 如果存在
       const fakeProfileKey = new Uint8Array(2);
       const fakeStorage = createFakeStorage();
       fakeStorage.get.withArgs('profileKey').returns(fakeProfileKey);

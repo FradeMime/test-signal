@@ -1,6 +1,6 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-
+// 安装屏幕选择设备名称步骤
 import type { ReactElement } from 'react';
 import React, { useRef } from 'react';
 
@@ -77,6 +77,7 @@ export function InstallScreenChoosingDeviceNameStep({
             type="submit"
           >
             {i18n('finishLinkingPhone')}
+            {/* 完成手机关联 */}
           </Button>
         </div>
       </div>

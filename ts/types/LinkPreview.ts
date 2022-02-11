@@ -10,6 +10,9 @@ import { replaceEmojiWithSpaces } from '../util/emoji';
 
 import type { AttachmentType } from './Attachment';
 
+import * as log from '../logging/log';
+
+
 export type LinkPreviewImage = AttachmentType & {
   data: Uint8Array;
 };
@@ -29,6 +32,7 @@ export type LinkPreviewWithDomain = {
 const linkify = LinkifyIt();
 
 export function isLinkSafeToPreview(href: string): boolean {
+  log.info('isLinkSafeToPreview函数');
   const url = maybeParseUrl(href);
   return Boolean(url && url.protocol === 'https:' && !isLinkSneaky(href));
 }
@@ -70,6 +74,7 @@ export function findLinks(text: string, caretLocation?: number): Array<string> {
 }
 
 export function getDomain(href: string): string {
+  log.info('getDomain函数')
   const url = maybeParseUrl(href);
   if (!url || !url.hostname) {
     throw new Error('getDomain: Unable to extract hostname from href');
@@ -113,6 +118,7 @@ const ASCII_PATTERN = new RegExp('[\\u0020-\\u007F]', 'g');
 const MAX_HREF_LENGTH = 2 ** 12;
 
 export function isLinkSneaky(href: string): boolean {
+  log.info('isLinkSneaky函数');
   // This helps users avoid extremely long links (which could be hiding something
   //   sketchy) and also sidesteps the performance implications of extremely long hrefs.
   if (href.length > MAX_HREF_LENGTH) {

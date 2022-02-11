@@ -11,6 +11,7 @@ import { AvatarPopup } from './AvatarPopup';
 import type { LocalizerType, ThemeType } from '../types/Util';
 import type { AvatarColorType } from '../types/Colors';
 import type { ConversationType } from '../state/ducks/conversations';
+// 搜索栏
 import { LeftPaneSearchInput } from './LeftPaneSearchInput';
 import type { BadgeType } from '../badges/types';
 
@@ -291,6 +292,7 @@ export class MainHeader extends React.Component<PropsType, StateType> {
               )
             : null}
         </Manager>
+        {/* 搜索查询栏 */}
         <LeftPaneSearchInput
           disabled={disabled}
           i18n={i18n}
@@ -303,7 +305,7 @@ export class MainHeader extends React.Component<PropsType, StateType> {
         />
         {!isSearching && (
           <button
-            aria-label={i18n('newConversation')}
+            aria-label={i18n('newConversation')}  // 新对话按钮
             className="module-main-header__compose-icon"
             onClick={startComposing}
             title={i18n('newConversation')}

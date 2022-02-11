@@ -101,6 +101,7 @@ export default class AccountManager extends EventTarget {
   }
 
   async requestSMSVerification(number: string, token: string) {
+    log.info('requestSMSVerification');
     return this.server.requestVerificationSMS(number, token);
   }
 
@@ -165,8 +166,10 @@ export default class AccountManager extends EventTarget {
     await window.textsecure.storage.user.setDeviceNameEncrypted();
   }
 
+  // /v1/accounts/sms/code/+8615051222098?captcha=token
   async registerSingleDevice(number: string, verificationCode: string) {
     return this.queueTask(async () => {
+      log.info('registerSingleDevice函数');
       const identityKeyPair = generateKeyPair();
       const pniKeyPair = generateKeyPair();
       const profileKey = getRandomBytes(PROFILE_KEY_LENGTH);
@@ -206,6 +209,7 @@ export default class AccountManager extends EventTarget {
     setProvisioningUrl: (url: string) => unknown,
     confirmNumber: (number?: string) => Promise<string>
   ) {
+    log.info('registerSecondDevice');
     const clearSessionsAndPreKeys = this.clearSessionsAndPreKeys.bind(this);
     const provisioningCipher = new ProvisioningCipher();
     const pubKey = await provisioningCipher.getPublicKey();
@@ -224,11 +228,13 @@ export default class AccountManager extends EventTarget {
 
     const wsr = await this.server.getProvisioningResource({
       handleRequest(request: IncomingWebSocketRequest) {
+        log.info('getProvisioningResource');
         if (
           request.path === '/v1/address' &&
           request.verb === 'PUT' &&
           request.body
         ) {
+          log.info('getProvisioningResource if');
           const proto = Proto.ProvisioningUuid.decode(request.body);
           const { uuid } = proto;
           if (!uuid) {
@@ -245,12 +251,13 @@ export default class AccountManager extends EventTarget {
           request.verb === 'PUT' &&
           request.body
         ) {
+          log.info('getProvisioningResource elseif');
           const envelope = Proto.ProvisionEnvelope.decode(request.body);
           request.respond(200, 'OK');
           wsr.close();
           envelopeCallbacks?.resolve(envelope);
         } else {
-          log.error('Unknown websocket message', request.path);
+          log.info('Unknown websocket message', request.path);
         }
       },
     });
@@ -287,6 +294,7 @@ export default class AccountManager extends EventTarget {
       const registrationBaton = this.server.startRegistration();
 
       try {
+        log.info(`AccountManager try createAccount:${provisionMessage}`);
         await this.createAccount({
           number: provisionMessage.number,
           verificationCode: provisionMessage.provisioningCode,
@@ -501,6 +509,19 @@ export default class AccountManager extends EventTarget {
     readReceipts,
     accessKey,
   }: CreateAccountOptionsType): Promise<void> {
+    log.info('createAccount函数');
+    log.info(`
+      参数：
+      number:${number};
+      verificationCode:${verificationCode};
+      identityKeyPair:${JSON.stringify(identityKeyPair)};
+      pniKeyPair:${JSON.stringify(pniKeyPair)};
+      profileKey:${profileKey};
+      deviceName:${deviceName};
+      userAgent:${userAgent};
+      readReceipts:${readReceipts};
+      accessKey:${accessKey}
+    `);
     const { storage } = window.textsecure;
     let password = Bytes.toBase64(getRandomBytes(16));
     password = password.substring(0, password.length - 2);
@@ -508,19 +529,19 @@ export default class AccountManager extends EventTarget {
 
     const previousNumber = getIdentifier(storage.get('number_id'));
     const previousUuid = getIdentifier(storage.get('uuid_id'));
-
+    // undefined
+    log.info(`createAccount preNum:${previousNumber};preUuid:${previousUuid}`);
     let encryptedDeviceName;
     if (deviceName) {
       encryptedDeviceName = this.encryptDeviceName(deviceName, identityKeyPair);
       await this.deviceNameIsEncrypted();
+      log.info(
+        `加密设备名称:devName:${deviceName};endevName:${encryptedDeviceName}`
+      );
     }
 
-    log.info(
-      `createAccount: Number is ${number}, password has length: ${
-        password ? password.length : 'none'
-      }`
-    );
-
+    log.info(`createAccount: Number is ${number}, password is: ${password}`);
+    log.info('准备校验验证码');
     const response = await this.server.confirmCode(
       number,
       verificationCode,
@@ -529,9 +550,15 @@ export default class AccountManager extends EventTarget {
       encryptedDeviceName,
       { accessKey }
     );
-
+    log.info('校验完成');
     const ourUuid = UUID.cast(response.uuid);
-    const ourPni = UUID.cast(response.pni);
+    // const ourPni = UUID.cast(response.pni);
+    const ourPni = ourUuid;
+    // const ourUuid = '936ccb79-90c0-4084-aa5b-3bf366c97f27';
+    // const ourPni = '936ccb79-90c0-4084-aa5b-3bf366c97f27';
+    log.info(
+      `createAccount confirmCode请求：ourUuid:${ourUuid};ourPni:${ourPni}`
+    );
 
     const uuidChanged = previousUuid && ourUuid && previousUuid !== ourUuid;
 
@@ -541,12 +568,12 @@ export default class AccountManager extends EventTarget {
 
     if (uuidChanged || numberChanged) {
       if (uuidChanged) {
-        log.warn(
+        log.info(
           'createAccount: New uuid is different from old uuid; deleting all previous data'
         );
       }
       if (numberChanged) {
-        log.warn(
+        log.info(
           'createAccount: New number is different from old number; deleting all previous data'
         );
       }
@@ -555,7 +582,7 @@ export default class AccountManager extends EventTarget {
         await storage.protocol.removeAllData();
         log.info('createAccount: Successfully deleted previous data');
       } catch (error) {
-        log.error(
+        log.info(
           'Something went wrong deleting data from previous number',
           error && error.stack ? error.stack : error
         );
@@ -566,7 +593,7 @@ export default class AccountManager extends EventTarget {
         RemoveAllConfiguration.Soft
       );
     }
-
+    log.info('senderCertificateService清除');
     await senderCertificateService.clear();
 
     if (previousUuid) {
@@ -588,6 +615,16 @@ export default class AccountManager extends EventTarget {
     // initializes the conversation for the given number (our number) which
     // calls out to the user storage API to get the stored UUID and number
     // information.
+    log.info('createAccount setCredentials设置');
+    log.info(`
+      setCredentials=
+      uuid:${ourUuid};
+      pni:${ourPni};
+      number:${number};
+      deviceId:${response.deviceId ?? 1};
+      deviceName:${deviceName ?? undefined};
+      password:${password}
+      `);
     await storage.user.setCredentials({
       uuid: ourUuid,
       pni: ourPni,
@@ -605,6 +642,7 @@ export default class AccountManager extends EventTarget {
       uuid: ourUuid,
       highTrust: true,
     });
+    log.info(`conversationId:${conversationId}`);
 
     if (!conversationId) {
       throw new Error('registrationDone: no conversationId!');
@@ -687,6 +725,7 @@ export default class AccountManager extends EventTarget {
     endDay: number,
     uuidKind: UUIDKind
   ) {
+    log.info('getGroupCredentials');
     return this.server.getGroupCredentials(startDay, endDay, uuidKind);
   }
 
@@ -712,7 +751,7 @@ export default class AccountManager extends EventTarget {
     const startId = window.textsecure.storage.get('maxPreKeyId', 1);
     const signedKeyId = window.textsecure.storage.get('signedKeyId', 1);
     const ourUuid = window.textsecure.storage.user.getCheckedUuid(uuidKind);
-
+    log.info('generateKeys');
     if (typeof startId !== 'number') {
       throw new Error('Invalid maxPreKeyId');
     }

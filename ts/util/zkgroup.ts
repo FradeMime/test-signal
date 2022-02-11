@@ -19,6 +19,7 @@ import {
 } from '@signalapp/signal-client/zkgroup';
 import { UUID } from '../types/UUID';
 import type { UUIDStringType } from '../types/UUID';
+import * as log from '../logging/log';
 
 export * from '@signalapp/signal-client/zkgroup';
 
@@ -140,6 +141,8 @@ export function generateProfileKeyCredentialRequest(
   uuid: UUIDStringType,
   profileKeyBase64: string
 ): { context: ProfileKeyCredentialRequestContext; requestHex: string } {
+  log.info('generate ProfileKey Credential      Request');
+  log.info(`uuid:${uuid.toString()};profileKeyBase64:${profileKeyBase64}`);
   const profileKeyArray = Buffer.from(profileKeyBase64, 'base64');
   const profileKey = new ProfileKey(profileKeyArray);
 

@@ -127,6 +127,7 @@ export function installFileHandler({
   );
 }
 
+// 关闭某些URI方案，因为我们使用via Node.js
 // Turn off browser URI scheme since we do all network requests via Node.js
 function _disabledHandler(
   _request: ProtocolRequest,
@@ -142,6 +143,7 @@ export function installWebHandler({
   protocol: typeof ElectronProtocol;
   enableHttp: boolean;
 }): void {
+  console.log('installWebHandle interceptFileProtocol函数');
   protocol.interceptFileProtocol('about', _disabledHandler);
   protocol.interceptFileProtocol('content', _disabledHandler);
   protocol.interceptFileProtocol('chrome', _disabledHandler);
@@ -154,6 +156,7 @@ export function installWebHandler({
   protocol.interceptFileProtocol('mailto', _disabledHandler);
 
   if (!enableHttp) {
+    console.log('!enableHttp');
     protocol.interceptFileProtocol('http', _disabledHandler);
     protocol.interceptFileProtocol('https', _disabledHandler);
     protocol.interceptFileProtocol('ws', _disabledHandler);

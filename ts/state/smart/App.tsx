@@ -44,7 +44,8 @@ const mapStateToProps = (state: StateType) => {
       token: string
     ): Promise<void> => {
       const accountManager = window.getAccountManager();
-
+      // eslint-disable-next-line no-console
+      console.log(`util app.ts type:${type}`);
       if (type === 'sms') {
         return accountManager.requestSMSVerification(number, token);
       }

@@ -13,6 +13,7 @@ import type { Response } from 'node-fetch';
 import fetch from 'node-fetch';
 import ProxyAgent from 'proxy-agent';
 import { Agent } from 'https';
+// import { http } from 'http';
 import pProps from 'p-props';
 import type { Dictionary } from 'lodash';
 import { compact, escapeRegExp, isNumber, mapValues, zipObject } from 'lodash';
@@ -25,6 +26,7 @@ import { z } from 'zod';
 import Long from 'long';
 import type { Readable } from 'stream';
 
+// import http from 'http';
 import { assert, strictAssert } from '../util/assert';
 import { isRecord } from '../util/isRecord';
 import * as durations from '../util/durations';
@@ -277,22 +279,30 @@ async function _promiseAjax(
   providedUrl: string | null,
   options: PromiseAjaxOptionsType
 ): Promise<unknown> {
+  // HTTP报错位置
+  log.info('_promiseAjax函数');
   const { proxyUrl, socketManager } = options;
-
   const url = providedUrl || `${options.host}/${options.path}`;
+  log.info(`_promiseAjax url:${url}`);
   const logType = socketManager ? '(WS)' : '(REST)';
+  // URL
   const redactedURL = options.redactUrl ? options.redactUrl(url) : url;
 
+  // 未经授权的标签
   const unauthLabel = options.unauthenticated ? ' (unauth)' : '';
   log.info(`${options.type} ${logType} ${redactedURL}${unauthLabel}`);
-
+  log.info(`_promiseAjax options:${JSON.stringify(options)}`);
   const timeout = typeof options.timeout === 'number' ? options.timeout : 10000;
 
-  const agentType = options.unauthenticated ? 'unauth' : 'auth';
-  const cacheKey = `${proxyUrl}-${agentType}`;
+  // const agentType = options.unauthenticated ? 'unauth' : 'auth';
+  // const cacheKey = `${proxyUrl}-${agentType}`;
+  const cacheKey = 'unauth';
+  log.info(`cacheKey:${cacheKey}`);
 
   const { timestamp } = agents[cacheKey] || { timestamp: null };
   if (!timestamp || timestamp + FIVE_MINUTES < Date.now()) {
+    log.info(`timestamp:${timestamp};dateTime:${Date.now()}`);
+    log.info('agents 代理变换');
     if (timestamp) {
       log.info(`Cycling agent for type ${cacheKey}`);
     }
@@ -303,8 +313,9 @@ async function _promiseAjax(
       timestamp: Date.now(),
     };
   }
-  const { agent } = agents[cacheKey];
-
+  const { agent } = agents[cacheKey]; // http模块参数
+  log.info(`agent :${JSON.stringify(agent)}`);
+  // agent.protocol = '';
   const fetchOptions = {
     method: options.type,
     body: options.data,
@@ -314,8 +325,8 @@ async function _promiseAjax(
       ...options.headers,
     } as FetchHeaderListType,
     redirect: options.redirect,
-    agent,
-    ca: options.certificateAuthority,
+    // agent,
+    // ca: options.certificateAuthority,
     timeout,
     abortSignal: options.abortSignal,
   };
@@ -338,27 +349,35 @@ async function _promiseAjax(
       fetchOptions.headers['Unidentified-Access-Key'] = accessKey;
     }
   } else if (options.user && options.password) {
-    const auth = Bytes.toBase64(
-      Bytes.fromString(`${options.user}:${options.password}`)
-    );
-    fetchOptions.headers.Authorization = `Basic ${auth}`;
+    log.info('_promiseAjax构造Authorization参数');
+    // const auth = Bytes.toBase64(
+    //   Bytes.fromString(`${options.user}.1:${options.password}`)
+    // );
+    fetchOptions.headers.Authorization = `Basic ${options.user}:${options.password}`;
+    // MTIzNDU2Nzg5MDE6MTIzNDU2 12345678901:123456
+    // base64('user:pwd')
   }
 
   if (options.contentType) {
     fetchOptions.headers['Content-Type'] = options.contentType;
   }
-
+  log.info(`fetch参数信息fetchOptions:${JSON.stringify(fetchOptions)}`);
+  // log.info(`fetch.agent参数信息:${JSON.stringify(fetchOptions.agent)}`);
+  // fetchOptions.agent['protocol']='http:';
   let response: Response;
   let result: string | Uint8Array | Readable | unknown;
   try {
+    log.info(`socketManager判断: url=${url}`);
     response = socketManager
       ? await socketManager.fetch(url, fetchOptions)
       : await fetch(url, fetchOptions);
-
+    log.info('try catch response');
     if (
       options.serverUrl &&
       getHostname(options.serverUrl) === getHostname(url)
     ) {
+      log.info('await handlestatus code');
+      // log.info(`sereverUrl:${getHostname(options.serverUrl)}`);
       await handleStatusCode(response.status);
 
       if (!unauthenticated && response.status === 401) {
@@ -388,12 +407,15 @@ async function _promiseAjax(
       result = await response.textConverted();
     }
   } catch (e) {
+    // TypeError: Protocol "http:" not supported. Expected "https:"
+    log.info('catch(e)异常内');
     log.error(options.type, logType, redactedURL, 0, 'Error');
     const stack = `${e.stack}\nInitial stack:\n${options.stack}`;
     throw makeHTTPError('promiseAjax catch', 0, {}, e.toString(), stack);
   }
 
   if (!isSuccess(response.status)) {
+    log.info('网络失败信息');
     log.error(options.type, logType, redactedURL, response.status, 'Error');
 
     throw makeHTTPError(
@@ -459,6 +481,7 @@ async function _retryAjax(
   const limit = providedLimit || 3;
 
   try {
+    log.info(`_retryAjax options:${JSON.stringify(options)}`);
     return await _promiseAjax(url, options);
   } catch (e) {
     if (e instanceof HTTPError && e.code === -1 && count < limit) {
@@ -502,7 +525,7 @@ async function _outerAjax(
   options: PromiseAjaxOptionsType
 ): Promise<unknown> {
   options.stack = new Error().stack; // just in case, save stack here.
-
+  log.info('_outerAjax函数');
   return _retryAjax(url, options);
 }
 
@@ -521,40 +544,42 @@ function makeHTTPError(
   });
 }
 
+//   removeSignalingKey: 'v1/accounts/signaling_key'
+//   ：服务端这个接口没有功能
 const URL_CALLS = {
-  accounts: 'v1/accounts',
+  accounts: 'v1/accounts', // 1.30.0
   accountExistence: 'v1/accounts/account',
-  attachmentId: 'v2/attachments/form/upload',
+  attachmentId: 'v2/attachments/form/upload', // 1.30.0
   attestation: 'v1/attestation',
   challenge: 'v1/challenge',
   config: 'v1/config',
-  deliveryCert: 'v1/certificate/delivery',
-  devices: 'v1/devices',
+  deliveryCert: 'v1/certificate/delivery', // 1.30.0
+  devices: 'v1/devices', // 1.30.0
   directoryAuth: 'v1/directory/auth',
   directoryAuthV2: 'v2/directory/auth',
   discovery: 'v1/discovery',
   getGroupAvatarUpload: 'v1/groups/avatar/form',
-  getGroupCredentials: 'v1/certificate/group',
+  getGroupCredentials: 'v1/certificate/group', // 创建群组
   getIceServers: 'v1/accounts/turn',
-  getStickerPackUpload: 'v1/sticker/pack/form',
+  getStickerPackUpload: 'v1/sticker/pack/form', // 1.30.0
   groupLog: 'v1/groups/logs',
   groups: 'v1/groups',
   groupsViaLink: 'v1/groups/join',
   groupToken: 'v1/groups/token',
-  keys: 'v2/keys',
-  messages: 'v1/messages',
+  keys: 'v2/keys', // 1.30.0
+  messages: 'v1/messages', // 1.30.0
   multiRecipient: 'v1/messages/multi_recipient',
-  profile: 'v1/profile',
+  profile: 'v1/profile', // 1.30.0
   registerCapabilities: 'v1/devices/capabilities',
   reportMessage: 'v1/messages/report',
-  signed: 'v2/keys/signed',
+  signed: 'v2/keys/signed', // 1.30.0
   storageManifest: 'v1/storage/manifest',
   storageModify: 'v1/storage/',
   storageRead: 'v1/storage/read',
   storageToken: 'v1/storage/auth',
   subscriptions: 'v1/subscription',
-  supportUnauthenticatedDelivery: 'v1/devices/unauthenticated_delivery',
-  updateDeviceName: 'v1/accounts/name',
+  supportUnauthenticatedDelivery: 'v1/devices/unauthenticated_delivery', // 1.30.0
+  updateDeviceName: 'v1/accounts/name', // 1.30.0
   username: 'v1/accounts/username',
   whoami: 'v1/accounts/whoami',
 };
@@ -619,6 +644,11 @@ export type MessageType = Readonly<{
 }>;
 
 type AjaxOptionsType = {
+  // 增加
+  // registrationLock?: string;
+  // pin?: string;
+  // signalingKey?: string;
+  // 旧
   basicAuth?: string;
   call: keyof typeof URL_CALLS;
   contentType?: string;
@@ -787,7 +817,7 @@ export type WebAPIType = {
   getAttachment: (cdnKey: string, cdnNumber?: number) => Promise<Uint8Array>;
   getAvatar: (path: string) => Promise<Uint8Array>;
   getDevices: () => Promise<GetDevicesResultType>;
-  getHasSubscription: (subscriberId: Uint8Array) => Promise<boolean>;
+  getHasSubscription: (subscriberId: Uint8Array) => Promise<boolean>; // 订阅？
   getGroup: (options: GroupCredentialsType) => Promise<Proto.Group>;
   getGroupFromLink: (
     inviteLinkPassword: string,
@@ -1073,7 +1103,7 @@ export function initialize({
       /$versions (\d{1,10})-(\d{1,10})\/(d{1,10})/;
 
     let activeRegistration: ExplodePromiseResultType<void> | undefined;
-
+    log.info('WebAPI.ts connect');
     const socketManager = new SocketManager({
       url,
       certificateAuthority,
@@ -1089,10 +1119,14 @@ export function initialize({
       window.Whisper.events.trigger('unlinkAndDisconnect');
     });
 
+    // username = '12345678901';
+    // password = '123456';
+    // webSocket登陆部分 使用username+password登陆
     if (useWebSocket) {
       socketManager.authenticate({ username, password });
     }
 
+    // cds 分布式socket初始化
     const cdsSocketManager = new CDSSocketManager({
       url: directoryV2Url,
       publicKey: directoryV2PublicKey,
@@ -1104,9 +1138,11 @@ export function initialize({
 
     let fetchForLinkPreviews: linkPreviewFetch.FetchFn;
     if (proxyUrl) {
+      log.info('代理模式');
       const agent = new ProxyAgent(proxyUrl);
       fetchForLinkPreviews = (href, init) => fetch(href, { ...init, agent });
     } else {
+      log.info('非代理模式');
       fetchForLinkPreviews = fetch;
     }
 
@@ -1194,7 +1230,9 @@ export function initialize({
       param: AjaxOptionsType & { responseType: 'json' }
     ): Promise<unknown>;
 
+    // 所有http请求接口都走这个函数
     async function _ajax(param: AjaxOptionsType): Promise<unknown> {
+      log.info('_ajax函数');
       if (
         !param.unauthenticated &&
         activeRegistration &&
@@ -1238,7 +1276,7 @@ export function initialize({
         unauthenticated: param.unauthenticated,
         accessKey: param.accessKey,
       };
-
+      log.info(`_ajax Params:${JSON.stringify(outerParams)}`);
       try {
         return await _outerAjax(null, outerParams);
       } catch (e) {
@@ -1462,7 +1500,7 @@ export function initialize({
         userLanguages,
         credentialType = 'profileKey',
       } = options;
-
+      log.info('_ajax getProfile');
       return (await _ajax({
         call: 'profile',
         httpType: 'GET',
@@ -1602,6 +1640,7 @@ export function initialize({
       });
     }
     async function putUsername(newUsername: string) {
+      log.info('putUerName');
       await _ajax({
         call: 'username',
         httpType: 'PUT',
@@ -1621,11 +1660,25 @@ export function initialize({
       });
     }
 
-    async function requestVerificationSMS(number: string, token: string) {
+    // 注册接口修正
+    // v1/accounts/sms/code/+12345678901
+    async function requestVerificationSMS(_number: string, _token: string) {
+      log.info('requestVerificationSMS函数');
+      // eslint-disable-next-line global-require
+      // const req = http.request(
+      //   'http://124.232.156.201:28810/v1/accounts/sms/code/+12345678901',
+      //   res => {
+      //     log.info(`http.request: res.statusCode=${res.statusCode}`);
+      //   }
+      // );
+      // req.end(); // 必须调用end()方法结束请求
+
       await _ajax({
         call: 'accounts',
         httpType: 'GET',
-        urlParameters: `/sms/code/${number}?captcha=${token}`,
+        // urlParameters: `/sms/code/${number}?captcha=${token}`,
+        // urlParameters: '/sms/code/+12345678901',
+        urlParameters: `/sms/code/${_number}`,
       });
     }
 
@@ -1668,6 +1721,7 @@ export function initialize({
       return activeRegistration;
     }
 
+    // 点击发送验证码后
     function finishRegistration(registration: unknown) {
       strictAssert(activeRegistration !== undefined, 'No active registration');
       strictAssert(
@@ -1683,35 +1737,48 @@ export function initialize({
 
     async function confirmCode(
       number: string,
-      code: string,
+      _code: string,
       newPassword: string,
-      registrationId: number,
-      deviceName?: string | null,
-      options: { accessKey?: Uint8Array } = {}
+      _registrationId: number,
+      _deviceName?: string | null,
+      _options: { accessKey?: Uint8Array } = {}
     ) {
-      const capabilities: CapabilitiesUploadType = {
-        announcementGroup: true,
-        'gv2-3': true,
-        'gv1-migration': true,
-        senderKey: true,
-        changeNumber: true,
-      };
+      log.info('confirmCode 验证');
+      // const capabilities: CapabilitiesUploadType = {
+      //   announcementGroup: true,
+      //   'gv2-3': true,
+      //   'gv1-migration': true,
+      //   senderKey: true,
+      //   changeNumber: true,
+      // };
 
-      const { accessKey } = options;
+      // const { accessKey } = options;
+      // const jsonData = {
+      //   capabilities,
+      //   fetchesMessages: true,
+      //   name: deviceName || undefined,
+      //   registrationId,
+      //   supportsSms: false,
+      //   unidentifiedAccessKey: accessKey
+      //     ? Bytes.toBase64(accessKey)
+      //     : undefined,
+      //   unrestrictedUnidentifiedAccess: false,
+      // };
       const jsonData = {
-        capabilities,
+        signalingKey:
+          'MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMg==',
         fetchesMessages: true,
-        name: deviceName || undefined,
-        registrationId,
-        supportsSms: false,
-        unidentifiedAccessKey: accessKey
-          ? Bytes.toBase64(accessKey)
-          : undefined,
-        unrestrictedUnidentifiedAccess: false,
+        name: _deviceName || undefined,
+        _registrationId,
+        pin: '1234abcd',
+        registrationLock:
+          '0123456789012345678901234567890123456789012345678901234567890123',
       };
+      // body参数 改
+      // eslint-disable-next-line camelcase
 
-      const call = deviceName ? 'devices' : 'accounts';
-      const urlPrefix = deviceName ? '/' : '/code/';
+      const call = _deviceName ? 'devices' : 'accounts';
+      const urlPrefix = _deviceName ? '/' : '/code/';
 
       // Reset old websocket credentials and disconnect.
       // AccountManager is our only caller and it will trigger
@@ -1722,20 +1789,72 @@ export function initialize({
       username = number;
       password = newPassword;
 
+      // response格式
+      // const response: Readonly<{
+      //   uuid: `${string}-${string}-${string}-${string}-${string}`;
+      //   pni: `${string}-${string}-${string}-${string}-${string}`;
+      //   deviceId?: number | undefined;
+      // }>
       const response = (await _ajax({
         isRegistration: true,
         call,
         httpType: 'PUT',
         responseType: 'json',
-        urlParameters: urlPrefix + code,
+        urlParameters: urlPrefix + _code,
+        // jsonData
         jsonData,
       })) as ConfirmCodeResultType;
+
+      // const authStr = `Basic ${username}.1:${password}`;
+      // const options = {
+      //   hostname: '124.232.156.201',
+      //   port: 28810,
+      //   path: `/v1/accounts/code/${_code}`, // 服务器强制code为888888
+      //   method: 'put',
+      //   headers: {
+      //     // Authorization: 'Basic +12345678901.1:123456',
+      //     // 合理Authorization为：'Basic +86150****2098.deviceId:password'
+      //     Authorization: authStr,
+      //     'Content-Type': 'application/json',
+      //   },
+      // };
+
+      // const req = http.request(options, res => {
+      //   log.info(`STATUS: ${res.statusCode}`);
+      //   log.info(`HEADERS: ${JSON.stringify(res.headers)}`);
+      //   // res.setEncoding('utf8');
+      //   res.on('data', d => {
+      //     log.info(`BODY: ${d}`);
+      //   });
+      //   res.on('end', () => {
+      //     log.info('验证完成');
+      //   });
+      // });
+      // req.on('error', e => {
+      //   log.info(`problem with request: ${e.message}`);
+      // });
+
+      // req.write(JSON.stringify(body_jsonData));
+      // req.end();
 
       // Set final REST credentials to let `registerKeys` succeed.
       username = `${response.uuid || number}.${response.deviceId || 1}`;
       password = newPassword;
 
       return response;
+
+      // const varx = '1234';
+      // type Foo = {
+      //   readonly uuid: `${string}-${string}-${string}-${string}-${string}`;
+      //   readonly pni: `${string}-${string}-${string}-${string}-${string}`;
+      //   readonly deviceId?: number | undefined;
+      // };
+      // const response: Foo = {
+      //   uuid: `${varx}-${varx}-${varx}-${varx}-${varx}`,
+      //   pni: `${varx}-${varx}-${varx}-${varx}-${varx}`,
+      //   deviceId: undefined,
+      // };
+      // return response;
     }
 
     async function updateDeviceName(deviceName: string) {
@@ -1780,10 +1899,12 @@ export function initialize({
     };
 
     async function registerKeys(genKeys: KeysType, uuidKind: UUIDKind) {
+      log.info('registerKeys函数');
       const preKeys = genKeys.preKeys.map(key => ({
         keyId: key.keyId,
         publicKey: Bytes.toBase64(key.publicKey),
       }));
+      log.info(`preKeys: ${JSON.stringify(preKeys)}`);
 
       const keys: JSONKeysType = {
         identityKey: Bytes.toBase64(genKeys.identityKey),
@@ -1794,14 +1915,16 @@ export function initialize({
         },
         preKeys,
       };
-
-      await _ajax({
-        isRegistration: true,
-        call: 'keys',
-        urlParameters: `?${uuidKindToQuery(uuidKind)}`,
-        httpType: 'PUT',
-        jsonData: keys,
-      });
+      log.info(`keys: ${JSON.stringify(keys)}`);
+      log.info(`urlParameters: ?${uuidKindToQuery(uuidKind)}`);
+      log.info('屏蔽registerKeys请求');
+      // await _ajax({
+      //   isRegistration: true,
+      //   call: 'keys',
+      //   urlParameters: `?${uuidKindToQuery(uuidKind)}`,
+      //   httpType: 'PUT',
+      //   jsonData: keys,
+      // });
     }
 
     async function setSignedPreKey(
@@ -2267,6 +2390,7 @@ export function initialize({
       targetUrl: string,
       options: ProxiedRequestOptionsType = {}
     ): Promise<MakeProxiedRequestResultType> {
+      log.info('发出代理请求');
       const { returnUint8Array, start, end } = options;
       const headers: HeaderListType = {
         'X-SignalPadding': getHeaderPadding(),
@@ -2347,6 +2471,8 @@ export function initialize({
       credentials: Array<GroupCredentialType>;
     };
 
+    // 创建群组
+    // url:port/v1/certificate/grout/{sTime}/{eTime}?identity=(kindType)
     async function getGroupCredentials(
       startDay: number,
       endDay: number,

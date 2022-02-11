@@ -43,6 +43,7 @@ export function translateError(error: HTTPError): HTTPError | undefined {
     default:
       message = 'The server rejected our query, please file a bug report.';
   }
+  log.info(`Utils.ts code:${code};message:${message}`);
   // eslint-disable-next-line no-param-reassign
   error.message = `${message} (original: ${error.message})`;
   return error;

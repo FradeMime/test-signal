@@ -51,6 +51,7 @@ function getInstallError(err: unknown): InstallError {
   if (err instanceof HTTPError) {
     switch (err.code) {
       case -1:
+        log.info('InstallScreen connectionFailed失败');
         return InstallError.ConnectionFailed;
       case 409:
         return InstallError.TooOld;
@@ -63,6 +64,7 @@ function getInstallError(err: unknown): InstallError {
   // AccountManager.registerSecondDevice uses this specific "websocket closed" error
   //   message.
   if (isRecord(err) && err.message === 'websocket closed') {
+    log.info('InstallScreen websocket closed错误');
     return InstallError.ConnectionFailed;
   }
   return InstallError.UnknownError;
@@ -92,7 +94,7 @@ export function SmartInstallScreen(): ReactElement {
     },
     [setState]
   );
-
+  log.info(`InstallScreen ProvisioningUrl:${setProvisioningUrl}`);
   const onQrCodeScanned = useCallback(() => {
     setState(currentState => {
       if (currentState.step !== InstallScreenStep.QrCodeNotScanned) {
@@ -109,7 +111,7 @@ export function SmartInstallScreen(): ReactElement {
       };
     });
   }, [setState]);
-
+  log.info(`InstallScreen onQrCodeScanned:${onQrCodeScanned.toString}`);
   const setDeviceName = useCallback(
     (deviceName: string) => {
       setState(currentState => {
@@ -124,7 +126,7 @@ export function SmartInstallScreen(): ReactElement {
     },
     [setState]
   );
-
+  log.info(`InstallScreen setDeviceName:${setDeviceName}`);
   const onSubmitDeviceName = useCallback(() => {
     if (state.step !== InstallScreenStep.ChoosingDeviceName) {
       return;
@@ -145,6 +147,7 @@ export function SmartInstallScreen(): ReactElement {
   }, [state, i18n]);
 
   useEffect(() => {
+    log.info('useEffect');
     let hasCleanedUp = false;
 
     const accountManager = window.getAccountManager();
@@ -156,6 +159,7 @@ export function SmartInstallScreen(): ReactElement {
       }
       setProvisioningUrl(value);
     };
+    log.info(`useEffect updateProvisioningUrl:${updateProvisioningUrl}`);
 
     const confirmNumber = async (): Promise<string> => {
       if (hasCleanedUp) {
@@ -223,6 +227,7 @@ export function SmartInstallScreen(): ReactElement {
 
   switch (state.step) {
     case InstallScreenStep.Error:
+      log.info('InstallScreenStep.Error');
       props = {
         step: InstallScreenStep.Error,
         screenSpecificProps: {
@@ -234,6 +239,7 @@ export function SmartInstallScreen(): ReactElement {
       };
       break;
     case InstallScreenStep.QrCodeNotScanned:
+      log.info('InstallScreenStep.QrCodeNotScanned');
       props = {
         step: InstallScreenStep.QrCodeNotScanned,
         screenSpecificProps: {
@@ -243,6 +249,7 @@ export function SmartInstallScreen(): ReactElement {
       };
       break;
     case InstallScreenStep.ChoosingDeviceName:
+      log.info('InstallScreenStep.ChoosingDeviceName');
       props = {
         step: InstallScreenStep.ChoosingDeviceName,
         screenSpecificProps: {
@@ -254,12 +261,14 @@ export function SmartInstallScreen(): ReactElement {
       };
       break;
     case InstallScreenStep.LinkInProgress:
+      log.info('InstallScreenStep.LinkInProgress');
       props = {
         step: InstallScreenStep.LinkInProgress,
         screenSpecificProps: { i18n },
       };
       break;
     default:
+      log.info('missingCaseError(state)');
       throw missingCaseError(state);
   }
 

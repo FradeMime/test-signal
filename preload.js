@@ -187,7 +187,7 @@ try {
 
     const ourUuid = window.textsecure.storage.user.getUuid();
     const ourPni = window.textsecure.storage.user.getUuid(UUIDKind.PNI);
-
+    log.info(`preload ourUuid:${ourUuid};ourPni:${ourPni}`);
     event.sender.send('additional-log-data-response', {
       capabilities: ourCapabilities || {},
       remoteConfig: _.mapValues(remoteConfig, ({ value, enabled }) => {
@@ -366,7 +366,8 @@ try {
 
   window.Backbone = require('backbone');
   window.textsecure = require('./ts/textsecure').default;
-
+  log.info(`preload url:${config.serverUrl}`);
+  log.info(`preload storageUrl:${config.storageUrl}`);
   window.WebAPI = window.textsecure.WebAPI.initialize({
     url: config.serverUrl,
     storageUrl: config.storageUrl,

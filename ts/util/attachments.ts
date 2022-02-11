@@ -8,10 +8,14 @@ import fse from 'fs-extra';
 import { isPathInside } from './isPathInside';
 
 const PATH = 'attachments.noindex';
+// 头像路径
 const AVATAR_PATH = 'avatars.noindex';
+// 徽章路径
 const BADGES_PATH = 'badges.noindex';
+// 表情包路径
 const STICKER_PATH = 'stickers.noindex';
 const TEMP_PATH = 'temp';
+// 绘制路径
 const DRAFT_PATH = 'drafts.noindex';
 
 const createPathGetter =

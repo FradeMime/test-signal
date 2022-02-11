@@ -380,6 +380,7 @@ function isRenderer() {
 
 function keyDatabase(db: Database, key: string): void {
   // https://www.zetetic.net/sqlcipher/sqlcipher-api/#key
+  log.info(`sql cipher key:${key}`);
   db.pragma(`key = "x'${key}'"`);
 }
 
@@ -414,12 +415,13 @@ function openAndMigrateDatabase(filePath: string, key: string) {
     keyDatabase(db, key);
     switchToWAL(db);
     migrateSchemaVersion(db);
-
+    log.info('sql cipher init successed');
     return db;
   } catch (error) {
     if (db) {
       db.close();
     }
+    log.info('sql cipher init failed');
     logger.info('migrateDatabase: Migration without cipher change failed');
   }
 
@@ -440,12 +442,13 @@ function openAndMigrateDatabase(filePath: string, key: string) {
 
   db.pragma('cipher_migrate');
   switchToWAL(db);
-
+  log.info('sql cipher init other fountion');
   return db;
 }
 
 const INVALID_KEY = /[^0-9A-Fa-f]/;
 function openAndSetUpSQLCipher(filePath: string, { key }: { key: string }) {
+  log.info(`db.sqlite 数据库秘钥是：${key}`);
   const match = INVALID_KEY.exec(key);
   if (match) {
     throw new Error(`setupSQLCipher: key '${key}' is not valid`);
@@ -564,6 +567,7 @@ async function initializeRenderer({
   let promisified: Database | undefined;
 
   try {
+    log.info(`databaseFilepath: ${databaseFilePath}`);
     promisified = openAndSetUpSQLCipher(databaseFilePath, { key });
 
     // At this point we can allow general access to the database
@@ -2137,6 +2141,7 @@ type ReactionResultType = Pick<
   ReactionType,
   'targetAuthorUuid' | 'targetTimestamp' | 'messageId'
 > & { rowid: number };
+// 获取未读消息并且标记为已读
 async function getUnreadReactionsAndMarkRead({
   conversationId,
   newestUnreadAt,
@@ -2146,6 +2151,7 @@ async function getUnreadReactionsAndMarkRead({
   newestUnreadAt: number;
   storyId?: UUIDStringType;
 }): Promise<Array<ReactionResultType>> {
+  // globalInstanceRenderer: db.sqlite
   const db = getInstance();
 
   return db.transaction(() => {
@@ -2183,6 +2189,7 @@ async function getUnreadReactionsAndMarkRead({
   })();
 }
 
+// 设置聊天消息为已读
 async function markReactionAsRead(
   targetAuthorUuid: string,
   targetTimestamp: number
@@ -2223,6 +2230,7 @@ async function markReactionAsRead(
   })();
 }
 
+// 向数据库中写入聊天记录
 async function addReaction({
   conversationId,
   emoji,
@@ -2267,6 +2275,7 @@ async function addReaction({
     });
 }
 
+// 从数据库中删除聊天记录
 async function removeReactionFromConversation({
   emoji,
   fromId,
