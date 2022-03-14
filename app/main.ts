@@ -147,10 +147,11 @@ let appStartInitialSpellcheckSetting = true;
 
 // 默认是否启动"开发者工具"界面
 const defaultWebPrefs = {
-  devTools:
-    process.argv.some(arg => arg === '--enable-dev-tools') ||
-    getEnvironment() !== Environment.Production ||
-    !isProduction(app.getVersion()),
+  // devTools:
+  //   process.argv.some(arg => arg === '--enable-dev-tools') ||
+  //   getEnvironment() !== Environment.Production ||
+  //   !isProduction(app.getVersion()),
+  devTools: false,
 };
 
 async function getSpellCheckSetting() {
