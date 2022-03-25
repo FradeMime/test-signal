@@ -1502,6 +1502,7 @@ export async function createGroupV2({
   conversationIds: Array<string>;
   avatars?: Array<AvatarDataType>;
 }>): Promise<ConversationModel> {
+  log.info('createGroupV2 Creating a group');
   // Ensure we have the credentials we need before attempting GroupsV2 operations
   await maybeFetchNewCredentials();
 

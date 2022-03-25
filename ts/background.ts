@@ -2134,6 +2134,7 @@ export async function startApp(): Promise<void> {
       const udSupportKey = 'hasRegisterSupportForUnauthenticatedDelivery';
       if (!window.storage.get(udSupportKey)) {
         try {
+          log.info('bg.ts v1/devices/unauthenticated_deliverfy');
           await server.registerSupportForUnauthenticatedDelivery();
           window.storage.put(udSupportKey, true);
         } catch (error) {

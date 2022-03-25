@@ -7,7 +7,7 @@
 import type {
   ConversationAttributesType,
   MessageAttributesType,
-  SenderKeyInfoType,
+  SenderKeyInfoType, // 发件人秘钥信息类型
 } from '../model-types.d';
 import type { StoredJob } from '../jobs/types';
 import type { ReactionType } from '../types/Reactions';

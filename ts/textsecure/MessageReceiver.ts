@@ -255,6 +255,7 @@ export default class MessageReceiver
     // We do the message decryption here, instead of in the ordered pending queue,
     // to avoid exposing the time it took us to process messages through the time-to-ack.
     // 在这里解密消息，而不是在挂起的队列中，避免暴露通过时间确认处理消息所花费的时间
+    // 服务端发出的request 客户端做response处理
     log.info('MessageReceiver: got request', request.verb, request.path);
     if (request.path !== '/api/v1/message') {
       request.respond(200, 'OK');
@@ -291,7 +292,8 @@ export default class MessageReceiver
         const envelope: ProcessedEnvelope = {
           // Make non-private envelope IDs dashless so they don't get redacted
           //   from logs
-          id: getGuid().replace(/-/g, ''), // 修改信封id
+          // 修改信封的uuid 删除-符号
+          id: getGuid().replace(/-/g, ''),
           receivedAtCounter: window.Signal.Util.incrementMessageCounter(),
           receivedAtDate: Date.now(),
           // Calculate the message age (time on server).
@@ -948,6 +950,7 @@ export default class MessageReceiver
       attempts: 1,
       messageAgeSec: envelope.messageAgeSec,
     };
+    // 数据加入到解密缓存任务队列
     this.decryptAndCacheBatcher.add({
       request,
       envelope,

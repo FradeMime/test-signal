@@ -49,6 +49,7 @@ export const MessageRequestActionsConfirmation = ({
           <Intl
             i18n={i18n}
             id={`MessageRequests--block-${conversationType}-confirm-title`}
+            // 是否屏蔽且离开-group/direct
             components={[<ContactName key="name" title={title} />]}
           />
         }
@@ -56,6 +57,7 @@ export const MessageRequestActionsConfirmation = ({
           ...(conversationType === 'direct'
             ? [
                 {
+                  // 举报垃圾消息以屏蔽
                   text: i18n('MessageRequests--block-and-report-spam'),
                   action: onBlockAndReportSpam,
                   style: 'negative' as const,
@@ -90,7 +92,7 @@ export const MessageRequestActionsConfirmation = ({
         }
         actions={[
           {
-            text: i18n('MessageRequests--unblock'),
+            text: i18n('MessageRequests--unblock'), // 取消屏蔽
             action: onUnblock,
             style: 'affirmative',
           },

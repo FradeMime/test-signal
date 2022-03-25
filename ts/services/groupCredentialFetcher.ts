@@ -123,7 +123,9 @@ export async function maybeFetchNewCredentials(): Promise<void> {
   const previous: CredentialsDataType | undefined = window.storage.get(
     GROUP_CREDENTIALS_KEY
   );
+  log.info(`previous:1=${previous};2=${JSON.stringify(previous)}`);
   const requestDates = getDatesForRequest(previous);
+  log.info(`requestDates:${requestDates}`);
   if (!requestDates) {
     log.info('maybeFetchCredentials: no new credentials needed');
     return;
@@ -141,9 +143,11 @@ export async function maybeFetchNewCredentials(): Promise<void> {
   );
 
   const serverPublicParamsBase64 = window.getServerPublicParams();
+  log.info(`serverPublicParamsBase64:${serverPublicParamsBase64}`);
   const clientZKAuthOperations = getClientZkAuthOperations(
     serverPublicParamsBase64
   );
+  log.info(`clientZKAuthOperations:${JSON.stringify(clientZKAuthOperations)}`);
   const newCredentials = sortCredentials(
     await accountManager.getGroupCredentials(startDay, endDay, UUIDKind.ACI)
   ).map((item: GroupCredentialType) => {
@@ -177,6 +181,7 @@ export async function maybeFetchNewCredentials(): Promise<void> {
 export function getDatesForRequest(
   data?: CredentialsDataType
 ): RequestDatesType | undefined {
+  log.info('getDatesForRequest');
   const todayInEpoch = getTodayInEpoch();
   const oneWeekOut = todayInEpoch + 7;
 

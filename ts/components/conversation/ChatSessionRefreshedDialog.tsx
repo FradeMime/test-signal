@@ -36,6 +36,7 @@ export function ChatSessionRefreshedDialog(
           />
         </div>
         <div className="module-chat-session-refreshed-dialog__title">
+          {/* 聊天会话已刷新 */}
           {i18n('ChatRefresh--notification')}
         </div>
         <div className="module-chat-session-refreshed-dialog__description">
@@ -50,6 +51,7 @@ export function ChatSessionRefreshedDialog(
               'module-chat-session-refreshed-dialog__button--secondary'
             )}
           >
+            {/* 联系支持 */}
             {i18n('ChatRefresh--contactSupport')}
           </button>
           <button

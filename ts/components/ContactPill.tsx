@@ -45,6 +45,7 @@ export const ContactPill: FunctionComponent<PropsType> = ({
   unblurredAvatarPath,
   onClickRemove,
 }) => {
+  // 移除联系人
   const removeLabel = i18n('ContactPill--remove');
 
   return (

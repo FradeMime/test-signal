@@ -1767,6 +1767,7 @@ function setComposeGroupName(groupName: string): SetComposeGroupNameActionType {
   };
 }
 
+// 阅后即焚 触发事件
 function setComposeGroupExpireTimer(
   groupExpireTimer: number
 ): SetComposeGroupExpireTimerActionType {
@@ -3288,6 +3289,7 @@ export function reducer(
     }
   }
 
+  // 阅后即焚 功能
   if (action.type === 'SET_COMPOSE_GROUP_EXPIRE_TIMER') {
     const { composer } = state;
 

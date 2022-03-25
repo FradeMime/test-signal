@@ -725,7 +725,7 @@ export default class AccountManager extends EventTarget {
     endDay: number,
     uuidKind: UUIDKind
   ) {
-    log.info('getGroupCredentials');
+    log.info('accountManager getGroupCredentials');
     return this.server.getGroupCredentials(startDay, endDay, uuidKind);
   }
 

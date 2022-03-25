@@ -118,6 +118,7 @@ export const ConversationListItem: FunctionComponent<Props> = React.memo(
     if (!acceptedMessageRequest) {
       messageText = (
         <span className={`${MESSAGE_TEXT_CLASS_NAME}__message-request`}>
+          {/* 通信请求 */}
           {i18n('ConversationListItem--message-request')}
         </span>
       );
@@ -127,6 +128,7 @@ export const ConversationListItem: FunctionComponent<Props> = React.memo(
       messageText = (
         <>
           <span className={`${MESSAGE_TEXT_CLASS_NAME}__draft-prefix`}>
+            {/* 草稿 */}
             {i18n('ConversationListItem--draft-prefix')}
           </span>
           <MessageBody
@@ -140,6 +142,7 @@ export const ConversationListItem: FunctionComponent<Props> = React.memo(
     } else if (lastMessage?.deletedForEveryone) {
       messageText = (
         <span className={`${MESSAGE_TEXT_CLASS_NAME}__deleted-for-everyone`}>
+          {/* 消息已删除 */}
           {i18n('message--deletedForEveryone')}
         </span>
       );

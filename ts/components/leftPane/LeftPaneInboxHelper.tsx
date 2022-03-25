@@ -65,6 +65,7 @@ export class LeftPaneInboxHelper extends LeftPaneHelper<LeftPaneInboxPropsType> 
     i18n,
   }: Readonly<{ i18n: LocalizerType }>): null | ReactChild {
     if (this.getRowCount() === 0) {
+      // 没有任何联系人和群组
       return (
         <div className="module-left-pane__empty">
           <div>

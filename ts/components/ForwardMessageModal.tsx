@@ -266,10 +266,11 @@ export const ForwardMessageModal: FunctionComponent<PropsType> = ({
     <>
       {cannotMessage && (
         <ConfirmationDialog
-          cancelText={i18n('Confirmation--confirm')}
+          cancelText={i18n('Confirmation--confirm')} // 确认
           i18n={i18n}
           onClose={() => setCannotMessage(false)}
         >
+          {/* You cannot send messages to that group */}
           {i18n('GroupV2--cannot-send')}
         </ConfirmationDialog>
       )}
@@ -289,7 +290,7 @@ export const ForwardMessageModal: FunctionComponent<PropsType> = ({
           >
             {isEditingMessage ? (
               <button
-                aria-label={i18n('back')}
+                aria-label={i18n('back')} // 后退
                 className="module-ForwardMessageModal__header--back"
                 onClick={() => setIsEditingMessage(false)}
                 type="button"
@@ -298,12 +299,13 @@ export const ForwardMessageModal: FunctionComponent<PropsType> = ({
               </button>
             ) : (
               <button
-                aria-label={i18n('close')}
+                aria-label={i18n('close')} // 关闭
                 className="module-ForwardMessageModal__header--close"
                 onClick={close}
                 type="button"
               />
             )}
+            {/* 转发消息 */}
             <h1>{i18n('forwardMessage')}</h1>
           </div>
           {isEditingMessage ? (
@@ -372,7 +374,7 @@ export const ForwardMessageModal: FunctionComponent<PropsType> = ({
             <div className="module-ForwardMessageModal__main-body">
               <SearchInput
                 disabled={candidateConversations.length === 0}
-                placeholder={i18n('contactSearchPlaceholder')}
+                placeholder={i18n('contactSearchPlaceholder')} // 搜索姓名或手机号码
                 onChange={event => {
                   setSearchTerm(event.target.value);
                 }}
@@ -432,6 +434,7 @@ export const ForwardMessageModal: FunctionComponent<PropsType> = ({
                 </Measure>
               ) : (
                 <div className="module-ForwardMessageModal__no-candidate-contacts">
+                  {/* 未找到联系人 */}
                   {i18n('noContactsFound')}
                 </div>
               )}

@@ -167,6 +167,7 @@ export class MessageDetail extends React.Component<Props> {
           className="module-message-detail__contact__show-safety-number"
           onClick={() => showSafetyNumber(contact.id)}
         >
+          {/* 查看安全码 */}
           {i18n('showSafetyNumber')}
         </button>
       </div>

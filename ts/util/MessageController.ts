@@ -125,6 +125,7 @@ export class MessageController {
     return this.messageLookup;
   }
 
+  // 设置定时消息清理
   startCleanupInterval(): NodeJS.Timeout | number {
     return setInterval(this.cleanup.bind(this), durations.HOUR);
   }

@@ -82,6 +82,7 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
     i18n: LocalizerType;
     showChooseGroupMembers: () => void;
   }>): ReactChild {
+    // 返回成员选择
     const backButtonLabel = i18n('setGroupMetadata__back-button');
 
     return (
@@ -95,6 +96,7 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
           type="button"
         />
         <div className="module-left-pane__header__contents__text">
+          {/* 命名该群组 */}
           {i18n('setGroupMetadata__title')}
         </div>
       </div>
@@ -155,6 +157,7 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
             hasXButton
             i18n={i18n}
             onClose={toggleComposeEditingAvatar}
+            // 群组头像
             title={i18n('LeftPaneSetGroupMetadataHelper__avatar-modal-title')}
           >
             <AvatarEditor
@@ -199,6 +202,7 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
 
         <section className="module-left-pane__header__form__expire-timer">
           <div className="module-left-pane__header__form__expire-timer__label">
+            {/* 阅后即焚 */}
             {i18n('disappearingMessages')}
           </div>
           <DisappearingTimerSelect
@@ -210,6 +214,7 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
 
         {this.hasError && (
           <Alert
+            // 无法创建该群组，请检查连接并重试
             body={i18n('setGroupMetadata__error-message')}
             i18n={i18n}
             onClose={clearGroupCreationError}
@@ -227,6 +232,7 @@ export class LeftPaneSetGroupMetadataHelper extends LeftPaneHelper<LeftPaneSetGr
     i18n: LocalizerType;
   }>): ReactChild {
     return (
+      // '创建'按钮
       <Button disabled={!this.canCreateGroup()} onClick={createGroup}>
         {this.isCreating ? (
           <Spinner size="20px" svgSize="small" direction="on-avatar" />

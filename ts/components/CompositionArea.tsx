@@ -405,7 +405,7 @@ export const CompositionArea = ({
         type="button"
         className="CompositionArea__attach-file"
         onClick={launchAttachmentPicker}
-        aria-label={i18n('CompositionArea--attach-file')}
+        aria-label={i18n('CompositionArea--attach-file')} // 附加文件
       />
     </div>
   );
@@ -421,7 +421,7 @@ export const CompositionArea = ({
         type="button"
         className="CompositionArea__send-button"
         onClick={handleForceSend}
-        aria-label={i18n('sendMessageToContact')}
+        aria-label={i18n('sendMessageToContact')} // 发送消息
       />
     </div>
   );
@@ -503,13 +503,14 @@ export const CompositionArea = ({
       >
         {isFetchingUUID ? (
           <Spinner
-            ariaLabel={i18n('CompositionArea--sms-only__spinner-label')}
+            ariaLabel={i18n('CompositionArea--sms-only__spinner-label')} // 正在检查联系人的注册状态
             role="presentation"
             moduleClassName="module-image-spinner"
             svgSize="small"
           />
         ) : (
           <>
+            {/* 此人未使用Signal */}
             <h2 className="CompositionArea--sms-only__title">
               {i18n('CompositionArea--sms-only__title')}
             </h2>

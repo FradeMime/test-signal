@@ -1,7 +1,7 @@
 // Copyright 2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import ProxyAgent from 'proxy-agent';
+import type ProxyAgent from 'proxy-agent';
 import { client as WebSocketClient } from 'websocket';
 import type { connection as WebSocket } from 'websocket';
 

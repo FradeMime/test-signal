@@ -373,6 +373,7 @@ export const ConversationDetails: React.ComponentType<Props> = ({
           }}
           variant={ButtonVariant.Details}
         >
+          {/* 取消静音 / 静音 */}
           {isConversationMuted ? i18n('unmute') : i18n('mute')}
         </Button>
         <Button
@@ -392,7 +393,7 @@ export const ConversationDetails: React.ComponentType<Props> = ({
             icon={
               <ConversationDetailsIcon
                 ariaLabel={i18n(
-                  'ConversationDetails--disappearing-messages-label'
+                  'ConversationDetails--disappearing-messages-label' // 限时消息
                 )}
                 icon={IconType.timer}
               />
@@ -453,7 +454,7 @@ export const ConversationDetails: React.ComponentType<Props> = ({
               onClick={() => toggleSafetyNumberModal(conversation.id)}
               icon={
                 <ConversationDetailsIcon
-                  ariaLabel={i18n('verifyNewNumber')}
+                  ariaLabel={i18n('verifyNewNumber')} // 验证安全码
                   icon={IconType.verify}
                 />
               }
@@ -500,7 +501,7 @@ export const ConversationDetails: React.ComponentType<Props> = ({
           <PanelRow
             icon={
               <ConversationDetailsIcon
-                ariaLabel={i18n('ConversationDetails--requests-and-invites')}
+                ariaLabel={i18n('ConversationDetails--requests-and-invites')} // 请求和邀请
                 icon={IconType.invites}
               />
             }

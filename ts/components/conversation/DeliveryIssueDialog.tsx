@@ -43,6 +43,7 @@ export function DeliveryIssueDialog(props: PropsType): React.ReactElement {
           />
         </div>
         <div className="module-delivery-issue-dialog__title">
+          {/* 发送问题 */}
           {i18n('DeliveryIssue--title')}
         </div>
         <div className="module-delivery-issue-dialog__description">

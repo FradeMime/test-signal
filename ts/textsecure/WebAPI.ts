@@ -74,7 +74,7 @@ import { maybeParseUrl } from '../util/url';
 // Note: this will break some code that expects to be able to use err.response when a
 //   web request fails, because it will force it to text. But it is very useful for
 //   debugging failed requests.
-const DEBUG = false;
+const DEBUG = true;
 
 type SgxConstantsType = {
   SGX_FLAGS_INITTED: Long;
@@ -1522,6 +1522,7 @@ export function initialize({
       })) as ProfileType;
     }
 
+    // http://124.232.156.201:28810/v1/profile/username/Leiqiu
     async function getProfileForUsername(usernameToFetch: string) {
       return (await _ajax({
         call: 'profile',
@@ -2354,6 +2355,7 @@ export function initialize({
     }
 
     function getHeaderPadding() {
+      log.info('getHeaderPadding');
       const max = getRandomValue(1, 64);
       let characters = '';
 
@@ -2368,6 +2370,7 @@ export function initialize({
       href: string,
       abortSignal: AbortSignal
     ) {
+      log.info('fetchLinkPreviewMetadata');
       return linkPreviewFetch.fetchLinkPreviewMetadata(
         fetchForLinkPreviews,
         href,
@@ -2379,6 +2382,7 @@ export function initialize({
       href: string,
       abortSignal: AbortSignal
     ) {
+      log.info('fetchLinkPreviewImage');
       return linkPreviewFetch.fetchLinkPreviewImage(
         fetchForLinkPreviews,
         href,
@@ -2442,6 +2446,7 @@ export function initialize({
       headers: HeaderListType,
       body: Uint8Array | undefined
     ): Promise<BytesWithDetailsType> {
+      log.info('makeSfuRequest');
       return _outerAjax(targetUrl, {
         certificateAuthority,
         data: body,
@@ -2460,6 +2465,7 @@ export function initialize({
       groupPublicParamsHex: string,
       authCredentialPresentationHex: string
     ) {
+      log.info('generateGroupAuth');
       return Bytes.toBase64(
         Bytes.fromString(
           `${groupPublicParamsHex}:${authCredentialPresentationHex}`
@@ -2478,19 +2484,21 @@ export function initialize({
       endDay: number,
       uuidKind: UUIDKind
     ): Promise<Array<GroupCredentialType>> {
+      log.info('webapi getGroupCredentials');
       const response = (await _ajax({
         call: 'getGroupCredentials',
         urlParameters: `/${startDay}/${endDay}?${uuidKindToQuery(uuidKind)}`,
         httpType: 'GET',
         responseType: 'json',
       })) as CredentialResponseType;
-
+      log.info('成功获取群组认证信息');
       return response.credentials;
     }
 
     async function getGroupExternalCredential(
       options: GroupCredentialsType
     ): Promise<Proto.GroupExternalCredential> {
+      log.info('getGroupExternalCredential');
       const basicAuth = generateGroupAuth(
         options.groupPublicParamsHex,
         options.authCredentialPresentationHex
@@ -2541,6 +2549,7 @@ export function initialize({
       uploadAvatarRequestHeaders: UploadAvatarHeadersType,
       avatarData: Uint8Array
     ): Promise<string> {
+      log.info('uploadAvatar');
       const verified = verifyAttributes(uploadAvatarRequestHeaders);
       const { key } = verified;
 
@@ -2562,6 +2571,7 @@ export function initialize({
       avatarData: Uint8Array,
       options: GroupCredentialsType
     ): Promise<string> {
+      log.info('uploadGroupAvatar');
       const basicAuth = generateGroupAuth(
         options.groupPublicParamsHex,
         options.authCredentialPresentationHex
@@ -2594,6 +2604,7 @@ export function initialize({
     }
 
     async function getGroupAvatar(key: string): Promise<Uint8Array> {
+      log.info('getGroupAvatar');
       return _outerAjax(`${cdnUrlObject['0']}/${key}`, {
         certificateAuthority,
         proxyUrl,
@@ -2609,6 +2620,7 @@ export function initialize({
       group: Proto.IGroup,
       options: GroupCredentialsType
     ): Promise<void> {
+      log.info('createGroup');
       const basicAuth = generateGroupAuth(
         options.groupPublicParamsHex,
         options.authCredentialPresentationHex
@@ -2628,6 +2640,7 @@ export function initialize({
     async function getGroup(
       options: GroupCredentialsType
     ): Promise<Proto.Group> {
+      log.info('getGroup');
       const basicAuth = generateGroupAuth(
         options.groupPublicParamsHex,
         options.authCredentialPresentationHex
@@ -2649,6 +2662,7 @@ export function initialize({
       inviteLinkPassword: string,
       auth: GroupCredentialsType
     ): Promise<Proto.GroupJoinInfo> {
+      log.info('getGroupFromLink');
       const basicAuth = generateGroupAuth(
         auth.groupPublicParamsHex,
         auth.authCredentialPresentationHex
@@ -2674,6 +2688,7 @@ export function initialize({
       options: GroupCredentialsType,
       inviteLinkBase64?: string
     ): Promise<Proto.IGroupChange> {
+      log.info('modifyGroup');
       const basicAuth = generateGroupAuth(
         options.groupPublicParamsHex,
         options.authCredentialPresentationHex
@@ -2706,6 +2721,7 @@ export function initialize({
       startVersion: number,
       options: GroupCredentialsType
     ): Promise<GroupLogResponseType> {
+      log.info('getGroupLog');
       const basicAuth = generateGroupAuth(
         options.groupPublicParamsHex,
         options.authCredentialPresentationHex
@@ -2754,6 +2770,7 @@ export function initialize({
     async function getHasSubscription(
       subscriberId: Uint8Array
     ): Promise<boolean> {
+      log.info('getHasSubscription');
       const formattedId = toWebSafeBase64(Bytes.toBase64(subscriberId));
       const data = await _ajax({
         call: 'subscriptions',
@@ -2782,6 +2799,7 @@ export function initialize({
       username: string;
       password: string;
     }> {
+      log.info('getDirectoryAuth');
       return (await _ajax({
         call: 'directoryAuth',
         httpType: 'GET',
@@ -2793,6 +2811,7 @@ export function initialize({
       username: string;
       password: string;
     }> {
+      log.info('getDirectoryAuthV2');
       return (await _ajax({
         call: 'directoryAuthV2',
         httpType: 'GET',
@@ -2807,6 +2826,7 @@ export function initialize({
       serverStaticPublic: Uint8Array;
       quote: Uint8Array;
     }) {
+      log.info('validateAttestationQuote');
       const SGX_CONSTANTS = getSgxConstants();
       const quote = Buffer.from(quoteBytes);
 
@@ -2894,6 +2914,7 @@ export function initialize({
       },
       encodedQuote: string
     ) {
+      log.info('validateAttestationSignatureBody');
       // Parse timestamp as UTC
       const { timestamp } = signatureBody;
       const utcTimestamp = timestamp.endsWith('Z')
@@ -2921,6 +2942,7 @@ export function initialize({
       signatureBody: string,
       certificates: string
     ) {
+      log.info('validateAttestationSignature');
       const CERT_PREFIX = '-----BEGIN CERTIFICATE-----';
       const pem = compact(
         certificates.split(CERT_PREFIX).map(match => {
@@ -2981,6 +3003,7 @@ export function initialize({
       username: string;
       password: string;
     }) {
+      log.info('putRemoteAttestation');
       const keyPair = generateKeyPair();
       const { privKey, pubKey } = keyPair;
       // Remove first "key type" byte from public key
@@ -3113,6 +3136,7 @@ export function initialize({
     async function getUuidsForE164s(
       e164s: ReadonlyArray<string>
     ): Promise<Dictionary<UUIDStringType | null>> {
+      log.info('getUuidsForE164s');
       const directoryAuth = await getDirectoryAuth();
       const attestationResult = await putRemoteAttestation(directoryAuth);
 
@@ -3191,6 +3215,7 @@ export function initialize({
       acis,
       accessKeys,
     }: GetUuidsForE164sV2OptionsType): Promise<CDSResponseType> {
+      log.info('getUuidsForE164sV2');
       const auth = await getDirectoryAuthV2();
 
       return cdsSocketManager.request({
